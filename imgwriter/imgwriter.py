@@ -26,5 +26,20 @@ def convert_color_space(a: ArrayLike,
     color space.
     """
     a = np.array(a)
-    a *= 0xff
-    return a.astype(np.uint8)
+    channels = {
+        1: ['', 'L',],
+        3: ['RGB',]
+    }
+    bitdepth = {
+        'float': ['',],
+        '8bit': ['L', 'RGB',]
+    }
+    
+    if src_space in channels[1] and dst_space in channels[3]:
+        a = np.tile(a[..., np.newaxis], (1, 1, 1, 3))
+    
+    if src_space in bitdepth['float'] and dst_space in bitdepth['8bit']:
+        a *= 0xff
+        a = a.astype(np.uint8)
+    
+    return a
