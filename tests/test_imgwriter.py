@@ -126,3 +126,298 @@ class CovertColorSpaceTestCase(ut.TestCase):
 
         # Determine test result.
         self.assertArrayEqual(exp, act)
+
+    def test_8bit_rgb_to_8bit_bgr(self):
+        """Given an array-like object of data in the 8-bit RGB color
+        space, return a numpy.ndarray object in the 8-bit BGR color
+        space.
+        """
+        # Expected result.
+        exp = np.array([
+            [
+                [
+                    [0x00, 0x7f, 0xff,],
+                    [0x00, 0x7f, 0xff,],
+                    [0x00, 0x7f, 0xff,],
+                ],
+                [
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                ],
+                [
+                    [0x7f, 0xff, 0x00,],
+                    [0x7f, 0xff, 0x00,],
+                    [0x7f, 0xff, 0x00,],
+                ],
+            ],
+            [
+                [
+                    [0x00, 0x7f, 0xff,],
+                    [0x00, 0x7f, 0xff,],
+                    [0x00, 0x7f, 0xff,],
+                ],
+                [
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                ],
+                [
+                    [0x7f, 0xff, 0x00,],
+                    [0x7f, 0xff, 0x00,],
+                    [0x7f, 0xff, 0x00,],
+                ],
+            ],
+        ], dtype=np.uint8)
+
+        # Test data and state.
+        a = [
+            [
+                [
+                    [0xff, 0x7f, 0x00,],
+                    [0xff, 0x7f, 0x00,],
+                    [0xff, 0x7f, 0x00,],
+                ],
+                [
+                    [0x7f, 0x00, 0xff,],
+                    [0x7f, 0x00, 0xff,],
+                    [0x7f, 0x00, 0xff,],
+                ],
+                [
+                    [0x00, 0xff, 0x7f,],
+                    [0x00, 0xff, 0x7f,],
+                    [0x00, 0xff, 0x7f,],
+                ],
+            ],
+            [
+                [
+                    [0xff, 0x7f, 0x00,],
+                    [0xff, 0x7f, 0x00,],
+                    [0xff, 0x7f, 0x00,],
+                ],
+                [
+                    [0x7f, 0x00, 0xff,],
+                    [0x7f, 0x00, 0xff,],
+                    [0x7f, 0x00, 0xff,],
+                ],
+                [
+                    [0x00, 0xff, 0x7f,],
+                    [0x00, 0xff, 0x7f,],
+                    [0x00, 0xff, 0x7f,],
+                ],
+            ],
+        ]
+        src_space = 'RGB'
+        dst_space = 'BGR'
+
+        # Run test.
+        act = iw.convert_color_space(a, src_space, dst_space)
+
+        # Determine test result.
+        self.assertArrayEqual(exp, act)
+
+    def test_8bit_rgb_to_float_grayscale(self):
+        """Given an array-like object of data in the 8-bit RGB color
+        space, return a numpy.ndarray object in the 8-bit RGB color
+        space. This uses a luminosity algorithm where the resulting
+        gray value is an uneven mix of the three color channels.
+        """
+        # Expected result.
+        exp = np.array([
+            [
+                [0.0, 0.498, 1.],
+                [0.0, 0.498, 1.],
+                [0.0, 0.498, 1.],
+            ],
+            [
+                [0.429, 0.569, 0.,],
+                [0.498, 0.498, 0.498],
+                [1., 1., 1.],
+            ],
+        ], dtype=float)
+
+        # Test data and state.
+        a = [
+            [
+                [
+                    [0x00, 0x00, 0x00,],
+                    [0x7f, 0x7f, 0x7f,],
+                    [0xff, 0xff, 0xff,],
+                ],
+                [
+                    [0x00, 0x00, 0x00,],
+                    [0x7f, 0x7f, 0x7f,],
+                    [0xff, 0xff, 0xff,],
+                ],
+                [
+                    [0x00, 0x00, 0x00,],
+                    [0x7f, 0x7f, 0x7f,],
+                    [0xff, 0xff, 0xff,],
+                ],
+            ],
+            [
+                [
+                    [0x00, 0x7f, 0xff,],
+                    [0xff, 0x7f, 0x00,],
+                    [0x00, 0x00, 0x00,],
+                ],
+                [
+                    [0x7f, 0x7f, 0x7f,],
+                    [0x7f, 0x7f, 0x7f,],
+                    [0x7f, 0x7f, 0x7f,],
+                ],
+                [
+                    [0xff, 0xff, 0xff,],
+                    [0xff, 0xff, 0xff,],
+                    [0xff, 0xff, 0xff,],
+                ],
+            ],
+        ]
+        src_space = 'RGB'
+        dst_space = ''
+
+        # Run test.
+        act = iw.convert_color_space(a, src_space, dst_space)
+
+        # Determine test result.
+        self.assertArrayEqual(exp, act)
+
+    def test_8bit_bgr_to_float_grayscale(self):
+        """Given an array-like object of data in the 8-bit BGR color
+        space, return a numpy.ndarray object in the floating point
+        grayscale color space. This uses a luminosity algorithm where
+        the resulting gray value is an uneven mix of the three color
+        channels.
+        """
+        # Expected result.
+        exp = np.array([
+            [
+                [0.0, 0.498, 1.],
+                [0.0, 0.498, 1.],
+                [0.0, 0.498, 1.],
+            ],
+            [
+                [0.569, 0.429, 0.,],
+                [0.498, 0.498, 0.498],
+                [1., 1., 1.],
+            ],
+        ], dtype=float)
+
+        # Test data and state.
+        a = [
+            [
+                [
+                    [0x00, 0x00, 0x00,],
+                    [0x7f, 0x7f, 0x7f,],
+                    [0xff, 0xff, 0xff,],
+                ],
+                [
+                    [0x00, 0x00, 0x00,],
+                    [0x7f, 0x7f, 0x7f,],
+                    [0xff, 0xff, 0xff,],
+                ],
+                [
+                    [0x00, 0x00, 0x00,],
+                    [0x7f, 0x7f, 0x7f,],
+                    [0xff, 0xff, 0xff,],
+                ],
+            ],
+            [
+                [
+                    [0x00, 0x7f, 0xff,],
+                    [0xff, 0x7f, 0x00,],
+                    [0x00, 0x00, 0x00,],
+                ],
+                [
+                    [0x7f, 0x7f, 0x7f,],
+                    [0x7f, 0x7f, 0x7f,],
+                    [0x7f, 0x7f, 0x7f,],
+                ],
+                [
+                    [0xff, 0xff, 0xff,],
+                    [0xff, 0xff, 0xff,],
+                    [0xff, 0xff, 0xff,],
+                ],
+            ],
+        ]
+        src_space = 'BGR'
+        dst_space = ''
+
+        # Run test.
+        act = iw.convert_color_space(a, src_space, dst_space)
+
+        # Determine test result.
+        self.assertArrayEqual(exp, act)
+
+    def test_8bit_grayscale_to_float_grayscale(self):
+        """Given an array-like object of data in the 8-bit grayscale
+        color space, return a numpy.ndarray in the float grayscale
+        space.
+        """
+        # Expected result.
+        exp = np.array([
+            [
+                [0., .498, 1.,],
+                [0., .498, 1.,],
+                [0., .498, 1.,],
+            ],
+            [
+                [0., 0., 0.,],
+                [.498, .498, .498,],
+                [1., 1., 1.,],
+            ],
+        ], dtype=float)
+
+        # Test data and state.
+        a = [
+            [
+                [0x00, 0x7f, 0xff,],
+                [0x00, 0x7f, 0xff,],
+                [0x00, 0x7f, 0xff,],
+            ],
+            [
+                [0x00, 0x00, 0x00,],
+                [0x7f, 0x7f, 0x7f,],
+                [0xff, 0xff, 0xff,],
+            ],
+        ]
+        src_space = 'L'
+        dst_space = ''
+
+        # Run test.
+        act = iw.convert_color_space(a, src_space, dst_space)
+
+        # Determine test result.
+        self.assertArrayEqual(exp, act)
+
+    def test_unsupported_source_color_space(self):
+        """If an unsupported source color space is given, raise a
+        ValueError exception."""
+        # Expected values.
+        exp_exception = ValueError
+        exp_msg = 'SPAM is not a supported color space.'
+
+        # Test data and state.
+        a = []
+        src_space = 'SPAM'
+        dst_space = 'L'
+
+        # Run test and determine result.
+        with self.assertRaisesRegex(exp_exception, exp_msg):
+            _ = iw.convert_color_space(a, src_space, dst_space)
+
+    def test_unsupported_destination_color_space(self):
+        """If an unsupported destination color space is given, raise a
+        ValueError exception."""
+        # Expected values.
+        exp_exception = ValueError
+        exp_msg = 'SPAM is not a supported color space.'
+
+        # Test data and state.
+        a = []
+        src_space = 'L'
+        dst_space = 'SPAM'
+
+        # Run test and determine result.
+        with self.assertRaisesRegex(exp_exception, exp_msg):
+            _ = iw.convert_color_space(a, src_space, dst_space)
