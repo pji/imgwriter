@@ -6,6 +6,7 @@ A Python module for saving arrays as images or video.
 """
 from typing import Any
 
+import cv2
 import numpy as np
 
 
@@ -31,7 +32,7 @@ def convert_color_space(a: ArrayLike,
     :return: A :class:numpy.ndarray object.
     :rtype: numpy.ndarray
     """
-    supported = ['', 'L', 'RGB', 'BGR']
+    supported = ['FPG', 'L', 'RGB', 'BGR']
     if src_space not in supported:
         raise ValueError(f'{src_space} is not a supported color space.')
     if dst_space not in supported:
@@ -39,11 +40,11 @@ def convert_color_space(a: ArrayLike,
 
     a = np.array(a)
     channels = {
-        1: ['', 'L',],
+        1: ['FPG', 'L',],
         3: ['RGB', 'BGR',]
     }
     bitdepth = {
-        'float': ['',],
+        'float': ['FPG',],
         '8bit': ['L', 'RGB', 'BGR',]
     }
 
@@ -77,3 +78,21 @@ def convert_color_space(a: ArrayLike,
         a = np.flip(a, -1)
 
     return a
+
+
+def save_image(filepath: str, a: ArrayLike, cspace: str) -> None:
+    a = np.array(a)
+    filetype = filepath.split('.')[-1]
+    if filetype in ['jpg', 'jpeg', 'jpe'] and cspace == 'FPG':
+        a = convert_color_space(a, 'FPG', 'L')
+
+    if a.shape[0] == 1:
+        a = a[0]
+        cv2.imwrite(filepath, a)
+
+    else:
+        parts = filepath.split('.')
+        filename = '.'.join(parts[:-1])
+        for i in range(a.shape[0]):
+            framepath = f'{filename}_{i}.{filetype}'
+            cv2.imwrite(framepath, a[i])

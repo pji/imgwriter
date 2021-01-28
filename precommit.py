@@ -27,6 +27,7 @@ ignore = []
 python_files = [
     '*'
     'imgwriter/*',
+    'examples/*'
     'tests/*',
 ]
 rst_files = [
