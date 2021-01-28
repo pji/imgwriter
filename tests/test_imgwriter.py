@@ -128,6 +128,95 @@ class CovertColorSpaceTestCase(ut.TestCase):
         # Determine test result.
         self.assertArrayEqual(exp, act)
 
+    def test_float_rgb_to_8bit_rgb(self):
+        """Given an array-like object of data in the floating point
+        RGB color space, return a numpy.ndarray object in the 8-bit
+        RGB color space.
+        """
+        # Expected result.
+        exp = np.array([
+            [
+                [
+                    [0x00, 0x00, 0x00,],
+                    [0x7f, 0x7f, 0x7f,],
+                    [0xff, 0xff, 0xff,],
+                ],
+                [
+                    [0x00, 0x00, 0x00,],
+                    [0x7f, 0x7f, 0x7f,],
+                    [0xff, 0xff, 0xff,],
+                ],
+                [
+                    [0x00, 0x00, 0x00,],
+                    [0x7f, 0x7f, 0x7f,],
+                    [0xff, 0xff, 0xff,],
+                ],
+            ],
+            [
+                [
+                    [0x00, 0x00, 0x00,],
+                    [0x00, 0x00, 0x00,],
+                    [0x00, 0x00, 0x00,],
+                ],
+                [
+                    [0x7f, 0x7f, 0x7f,],
+                    [0x7f, 0x7f, 0x7f,],
+                    [0x7f, 0x7f, 0x7f,],
+                ],
+                [
+                    [0xff, 0xff, 0xff,],
+                    [0xff, 0xff, 0xff,],
+                    [0xff, 0xff, 0xff,],
+                ],
+            ],
+        ], dtype=np.uint8)
+
+        # Test data and state.
+        a = [
+            [
+                [
+                    [0., 0., 0.,],
+                    [.5, .5, .5,],
+                    [1., 1., 1.,],
+                ],
+                [
+                    [0., 0., 0.,],
+                    [.5, .5, .5,],
+                    [1., 1., 1.,],
+                ],
+                [
+                    [0., 0., 0.,],
+                    [.5, .5, .5,],
+                    [1., 1., 1.,],
+                ],
+            ],
+            [
+                [
+                    [0., 0., 0.,],
+                    [0., 0., 0.,],
+                    [0., 0., 0.,],
+                ],
+                [
+                    [.5, .5, .5,],
+                    [.5, .5, .5,],
+                    [.5, .5, .5,],
+                ],
+                [
+                    [1., 1., 1.,],
+                    [1., 1., 1.,],
+                    [1., 1., 1.,],
+                ],
+            ],
+        ]
+        src_space = 'FPC'
+        dst_space = 'RGB'
+
+        # Run test.
+        act = iw.convert_color_space(a, src_space, dst_space)
+
+        # Determine test result.
+        self.assertArrayEqual(exp, act)
+
     def test_8bit_rgb_to_8bit_bgr(self):
         """Given an array-like object of data in the 8-bit RGB color
         space, return a numpy.ndarray object in the 8-bit BGR color
@@ -434,6 +523,92 @@ class SaveImageTestCase(ut.TestCase):
         self.assertListEqual(a_list, b_list)
 
     @patch('cv2.imwrite')
+    def save_8_bit_rgb(self, exp_path, mock_imwrite):
+        """Given image data in the 8-bit RGB color space and a file
+        path, save the image data to the given file path.
+        """
+        # Test data and state.
+        a = [
+            [
+                [
+                    [0xff, 0x7f, 0x00,],
+                    [0xff, 0x7f, 0x00,],
+                    [0xff, 0x7f, 0x00,],
+                ],
+                [
+                    [0x7f, 0x00, 0xff,],
+                    [0x7f, 0x00, 0xff,],
+                    [0x7f, 0x00, 0xff,],
+                ],
+                [
+                    [0x00, 0xff, 0x7f,],
+                    [0x00, 0xff, 0x7f,],
+                    [0x00, 0xff, 0x7f,],
+                ],
+            ],
+        ]
+        space = 'RGB'
+
+        # Expected value.
+        exp_a = (np.array(a[0], dtype=np.uint8))
+
+        # Run test.
+        iw.save_image(exp_path, a, space)
+
+        # Extract actual result.
+        mock_imwrite.call_args
+        args = mock_imwrite.call_args.args
+        act_path = args[0]
+        act_a = args[1]
+
+        # Determine test result.
+        self.assertEqual(exp_path, act_path)
+        self.assertArrayEqual(exp_a, act_a)
+    
+    @patch('cv2.imwrite')
+    def save_float_rgb(self, exp_path, mock_imwrite):
+        """Given image data in the 8-bit RGB color space and a file
+        path, save the image data to the given file path.
+        """
+        # Test data and state.
+        a = [
+            [
+                [
+                    [1., .5, 0.,],
+                    [1., .5, 0.,],
+                    [1., .5, 0.,],
+                ],
+                [
+                    [.5, 0., 1.,],
+                    [.5, 0., 1.,],
+                    [.5, 0., 1.,],
+                ],
+                [
+                    [0., 1., .5,],
+                    [0., 1., .5,],
+                    [0., 1., .5,],
+                ],
+            ],
+        ]
+        space = 'RGB'
+
+        # Expected value.
+        exp_a = np.array(a[0], dtype=float)
+        
+        # Run test.
+        iw.save_image(exp_path, a, space)
+
+        # Extract actual result.
+        mock_imwrite.call_args
+        args = mock_imwrite.call_args.args
+        act_path = args[0]
+        act_a = args[1]
+
+        # Determine test result.
+        self.assertEqual(exp_path, act_path)
+        self.assertArrayEqual(exp_a, act_a)
+    
+    @patch('cv2.imwrite')
     def test_save_fpg_as_jpeg(self, mock_imwrite):
         """Given image data in the floating point grayscale color
         space and a file path, save the image data to the file path
@@ -547,41 +722,25 @@ class SaveImageTestCase(ut.TestCase):
         """Given image data in the 8-bit RGB color space and a file
         path, save the image data to the file path as a JPEG file.
         """
-        # Test data and state.
-        a = [
-            [
-                [
-                    [0xff, 0x7f, 0x00,],
-                    [0xff, 0x7f, 0x00,],
-                    [0xff, 0x7f, 0x00,],
-                ],
-                [
-                    [0x7f, 0x00, 0xff,],
-                    [0x7f, 0x00, 0xff,],
-                    [0x7f, 0x00, 0xff,],
-                ],
-                [
-                    [0x00, 0xff, 0x7f,],
-                    [0x00, 0xff, 0x7f,],
-                    [0x00, 0xff, 0x7f,],
-                ],
-            ],
-        ]
-        space = 'RGB'
+        self.save_8_bit_rgb('spam.jpg')
 
-        # Expected value.
-        exp_path = 'spam.jpg'
-        exp_a = (np.array(a[0], dtype=np.uint8))
+    @patch('cv2.imwrite')
+    def test_save_8_bit_rgb_as_png(self, mock_imwrite):
+        """Given image data in the 8-bit RGB color space and a file
+        path, save the image data to the file path as a PNG file.
+        """
+        self.save_8_bit_rgb('spam.png')
 
-        # Run test.
-        iw.save_image(exp_path, a, space)
+    @patch('cv2.imwrite')
+    def test_save_8_bit_rgb_as_tiff(self, mock_imwrite):
+        """Given image data in the 8-bit RGB color space and a file
+        path, save the image data to the file path as a PNG file.
+        """
+        self.save_8_bit_rgb('spam.tiff')
 
-        # Extract actual result.
-        mock_imwrite.call_args
-        args = mock_imwrite.call_args.args
-        act_path = args[0]
-        act_a = args[1]
-
-        # Determine test result.
-        self.assertEqual(exp_path, act_path)
-        self.assertArrayEqual(exp_a, act_a)
+    @patch('cv2.imwrite')
+    def test_save_float_rgb_as_tiff(self, mock_imwrite):
+        """Given image data in the 8-bit RGB color space and a file
+        path, save the image data to the file path as a PNG file.
+        """
+        self.save_float_rgb('spam.tiff')

@@ -18,6 +18,9 @@ import numpy as np
 # consequences.
 ArrayLike = Any
 
+SUPPORTED_COLOR_SPACES = ['FPC', 'FPG', 'L', 'RGB', 'BGR']
+MUST_BE_8_BIT_INT = ['jpg', 'jpeg', 'jpe', 'png']
+
 
 # Utility functions.
 def convert_color_space(a: ArrayLike,
@@ -32,19 +35,18 @@ def convert_color_space(a: ArrayLike,
     :return: A :class:numpy.ndarray object.
     :rtype: numpy.ndarray
     """
-    supported = ['FPG', 'L', 'RGB', 'BGR']
-    if src_space not in supported:
+    if src_space not in SUPPORTED_COLOR_SPACES:
         raise ValueError(f'{src_space} is not a supported color space.')
-    if dst_space not in supported:
+    if dst_space not in SUPPORTED_COLOR_SPACES:
         raise ValueError(f'{dst_space} is not a supported color space.')
 
     a = np.array(a)
     channels = {
         1: ['FPG', 'L',],
-        3: ['RGB', 'BGR',]
+        3: ['RGB', 'BGR', 'FPC']
     }
     bitdepth = {
-        'float': ['FPG',],
+        'float': ['FPC', 'FPG',],
         '8bit': ['L', 'RGB', 'BGR',]
     }
 
@@ -59,10 +61,11 @@ def convert_color_space(a: ArrayLike,
             a = np.flip(a, -1)
             src_space = 'RGB'
         a = a[:, :, :, 0] * .21 + a[:, :, :, 1] * .72 + a[:, :, :, 2] * .07
-        a /= 0xff
-        a = a.astype(float)
-        a = np.around(a, 3)
-        src_space = ''
+        if src_space in bitdepth['8bit']:
+            a /= 0xff
+            a = a.astype(float)
+            a = np.around(a, 3)
+            src_space = ''
 
     if src_space in bitdepth['float'] and dst_space in bitdepth['8bit']:
         a *= 0xff
@@ -83,7 +86,7 @@ def convert_color_space(a: ArrayLike,
 def save_image(filepath: str, a: ArrayLike, cspace: str) -> None:
     a = np.array(a)
     filetype = filepath.split('.')[-1]
-    if filetype in ['jpg', 'jpeg', 'jpe'] and cspace == 'FPG':
+    if filetype in MUST_BE_8_BIT_INT and cspace == 'FPG':
         a = convert_color_space(a, 'FPG', 'L')
 
     if a.shape[0] == 1:
