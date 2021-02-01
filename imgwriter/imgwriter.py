@@ -17,77 +17,29 @@ import numpy as np
 # the data will be converted to an ndarray, which may have
 # consequences.
 ArrayLike = Any
-
-SUPPORTED_COLOR_SPACES = ['FPC', 'FPG', 'L', 'RGB', 'BGR']
-MUST_BE_8_BIT_INT = ['jpg', 'jpeg', 'jpe', 'png']
+X, Y, Z = 2, 1, 0
 
 
 # Utility functions.
-def convert_color_space(a: ArrayLike,
-                        src_space: str,
-                        dst_space: str) -> np.ndarray:
-    """Convert an array from the source color space to the destination
-    color space.
-
-    :param a: The array of image data.
-    :param src_space: The current color space of the image data.
-    :param dst_space: THe colorspace to convert the image data to.
-    :return: A :class:numpy.ndarray object.
-    :rtype: numpy.ndarray
+def _float_to_uint8(a: ArrayLike) -> ArrayLike:
+    """Convert an array of floating point values to an array of
+    unsigned 8-bit integers.
     """
-    if src_space not in SUPPORTED_COLOR_SPACES:
-        raise ValueError(f'{src_space} is not a supported color space.')
-    if dst_space not in SUPPORTED_COLOR_SPACES:
-        raise ValueError(f'{dst_space} is not a supported color space.')
-
     a = np.array(a)
-    channels = {
-        1: ['FPG', 'L',],
-        3: ['RGB', 'BGR', 'FPC']
-    }
-    bitdepth = {
-        'float': ['FPC', 'FPG',],
-        '8bit': ['L', 'RGB', 'BGR',]
-    }
+    if np.max(a) > 1 or np.min(a) < 0:
+        msg = 'Array values must be 0 >= x >= 1.'
+        raise ValueError(msg)
 
-    if src_space in channels[1] and dst_space in channels[3]:
-        a = np.tile(a[..., np.newaxis], (1, 1, 1, 3))
-
-    # The luminosity algorithm used here taken from:
-    #   https://www.johndcook.com/blog/2009/08/24/algorithms-
-    #   convert-color-grayscale/
-    elif src_space in channels[3] and dst_space in channels[1]:
-        if src_space == 'BGR':
-            a = np.flip(a, -1)
-            src_space = 'RGB'
-        a = a[:, :, :, 0] * .21 + a[:, :, :, 1] * .72 + a[:, :, :, 2] * .07
-        if src_space in bitdepth['8bit']:
-            a /= 0xff
-            a = a.astype(float)
-            a = np.around(a, 3)
-            src_space = ''
-
-    if src_space in bitdepth['float'] and dst_space in bitdepth['8bit']:
-        a *= 0xff
-        a = a.astype(np.uint8)
-    elif src_space in bitdepth['8bit'] and dst_space in bitdepth['float']:
-        a = a.astype(float)
-        a /= 0xff
-        a = np.around(a, 3)
-
-    if (src_space in ['RGB', 'BGR']
-            and dst_space in ['RGB', 'BGR']
-            and src_space != dst_space):
-        a = np.flip(a, -1)
-
-    return a
+    a *= 0xff
+    return a.astype(np.uint8)
 
 
-def save_image(filepath: str, a: ArrayLike, cspace: str) -> None:
+def save_image(filepath: str, a: ArrayLike) -> None:
     a = np.array(a)
     filetype = filepath.split('.')[-1]
-    if filetype in MUST_BE_8_BIT_INT and cspace == 'FPG':
-        a = convert_color_space(a, 'FPG', 'L')
+
+    if a.dtype in [float, np.float32]:
+        a = _float_to_uint8(a)
 
     if a.shape[0] == 1:
         a = a[0]
@@ -99,3 +51,19 @@ def save_image(filepath: str, a: ArrayLike, cspace: str) -> None:
         for i in range(a.shape[0]):
             framepath = f'{filename}_{i}.{filetype}'
             cv2.imwrite(framepath, a[i])
+
+
+def save_video(filepath: str, a: ArrayLike, framerate: float = 12) -> None:
+    a = np.array(a)
+    if a.dtype != np.uint8:
+        a = a.astype(np.uint8)
+    bgr_a = np.flip(a, -1)
+
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    framesize = (a.shape[X], a.shape[Y])
+    iscolor = True
+
+    vwriter = cv2.VideoWriter(filepath, fourcc, framerate, framesize, iscolor)
+    for i in range(a.shape[Z]):
+        vwriter.write(bgr_a[i])
+    vwriter.release()

@@ -4,6 +4,7 @@ test_imgwriter
 
 Unit tests for the imgwriter.imgwriter module.
 """
+import os
 import unittest as ut
 from unittest.mock import call, patch
 
@@ -13,7 +14,7 @@ from imgwriter import imgwriter as iw
 
 
 # Test cases.
-class CovertColorSpaceTestCase(ut.TestCase):
+class FloatToUint8TestCase(ut.TestCase):
     def assertArrayEqual(self, a, b):
         """Given two numpy.ndarray objects, raise an AssertionError if
         they are not equal.
@@ -22,10 +23,10 @@ class CovertColorSpaceTestCase(ut.TestCase):
         b_list = b.tolist()
         self.assertListEqual(a_list, b_list)
 
-    def test_float_grayscale_to_8bit_grayscale(self):
-        """Given an array-like object of data in the floating point
-        grayscale color space, return a numpy.ndarray object in the
-        8-bit grayscale color space.
+    def test_covert(self):
+        """Given an array-like object of floating point values between
+        zero and one, return a numpy.ndarray object of unsigned 8-bit
+        integers between zero and 255.
         """
         # Expected result.
         exp = np.array([
@@ -33,14 +34,9 @@ class CovertColorSpaceTestCase(ut.TestCase):
                 [0x00, 0x7f, 0xff,],
                 [0x00, 0x7f, 0xff,],
                 [0x00, 0x7f, 0xff,],
-            ],
-            [
-                [0x00, 0x00, 0x00,],
-                [0x7f, 0x7f, 0x7f,],
-                [0xff, 0xff, 0xff,],
             ],
         ], dtype=np.uint8)
-
+        
         # Test data and state.
         a = [
             [
@@ -48,472 +44,48 @@ class CovertColorSpaceTestCase(ut.TestCase):
                 [0., .5, 1.,],
                 [0., .5, 1.,],
             ],
-            [
-                [0., 0., 0.,],
-                [.5, .5, .5,],
-                [1., 1., 1.,],
-            ],
         ]
-        src_space = 'FPG'
-        dst_space = 'L'
-
+        
         # Run test.
-        act = iw.convert_color_space(a, src_space, dst_space)
-
+        act = iw._float_to_uint8(a)
+        
         # Determine test result.
         self.assertArrayEqual(exp, act)
 
-    def test_float_grayscale_to_8bit_rgb(self):
-        """Given an array-like object of data in the floating point
-        grayscale color space, return a numpy.ndarray object in the
-        8-bit RGB color space.
+    def test_value_out_of_range(self):
+        """Given an array-like object of floating point with a value
+        greater than one, raise a ValueError exception.
         """
         # Expected result.
+        exp_ex = ValueError
+        exp_msg = 'Array values must be 0 >= x >= 1.'
+        
         exp = np.array([
-            [
-                [
-                    [0x00, 0x00, 0x00,],
-                    [0x7f, 0x7f, 0x7f,],
-                    [0xff, 0xff, 0xff,],
-                ],
-                [
-                    [0x00, 0x00, 0x00,],
-                    [0x7f, 0x7f, 0x7f,],
-                    [0xff, 0xff, 0xff,],
-                ],
-                [
-                    [0x00, 0x00, 0x00,],
-                    [0x7f, 0x7f, 0x7f,],
-                    [0xff, 0xff, 0xff,],
-                ],
-            ],
-            [
-                [
-                    [0x00, 0x00, 0x00,],
-                    [0x00, 0x00, 0x00,],
-                    [0x00, 0x00, 0x00,],
-                ],
-                [
-                    [0x7f, 0x7f, 0x7f,],
-                    [0x7f, 0x7f, 0x7f,],
-                    [0x7f, 0x7f, 0x7f,],
-                ],
-                [
-                    [0xff, 0xff, 0xff,],
-                    [0xff, 0xff, 0xff,],
-                    [0xff, 0xff, 0xff,],
-                ],
-            ],
-        ], dtype=np.uint8)
-
-        # Test data and state.
-        a = [
-            [
-                [0., .5, 1.,],
-                [0., .5, 1.,],
-                [0., .5, 1.,],
-            ],
-            [
-                [0., 0., 0.,],
-                [.5, .5, .5,],
-                [1., 1., 1.,],
-            ],
-        ]
-        src_space = 'FPG'
-        dst_space = 'RGB'
-
-        # Run test.
-        act = iw.convert_color_space(a, src_space, dst_space)
-
-        # Determine test result.
-        self.assertArrayEqual(exp, act)
-
-    def test_float_rgb_to_8bit_rgb(self):
-        """Given an array-like object of data in the floating point
-        RGB color space, return a numpy.ndarray object in the 8-bit
-        RGB color space.
-        """
-        # Expected result.
-        exp = np.array([
-            [
-                [
-                    [0x00, 0x00, 0x00,],
-                    [0x7f, 0x7f, 0x7f,],
-                    [0xff, 0xff, 0xff,],
-                ],
-                [
-                    [0x00, 0x00, 0x00,],
-                    [0x7f, 0x7f, 0x7f,],
-                    [0xff, 0xff, 0xff,],
-                ],
-                [
-                    [0x00, 0x00, 0x00,],
-                    [0x7f, 0x7f, 0x7f,],
-                    [0xff, 0xff, 0xff,],
-                ],
-            ],
-            [
-                [
-                    [0x00, 0x00, 0x00,],
-                    [0x00, 0x00, 0x00,],
-                    [0x00, 0x00, 0x00,],
-                ],
-                [
-                    [0x7f, 0x7f, 0x7f,],
-                    [0x7f, 0x7f, 0x7f,],
-                    [0x7f, 0x7f, 0x7f,],
-                ],
-                [
-                    [0xff, 0xff, 0xff,],
-                    [0xff, 0xff, 0xff,],
-                    [0xff, 0xff, 0xff,],
-                ],
-            ],
-        ], dtype=np.uint8)
-
-        # Test data and state.
-        a = [
-            [
-                [
-                    [0., 0., 0.,],
-                    [.5, .5, .5,],
-                    [1., 1., 1.,],
-                ],
-                [
-                    [0., 0., 0.,],
-                    [.5, .5, .5,],
-                    [1., 1., 1.,],
-                ],
-                [
-                    [0., 0., 0.,],
-                    [.5, .5, .5,],
-                    [1., 1., 1.,],
-                ],
-            ],
-            [
-                [
-                    [0., 0., 0.,],
-                    [0., 0., 0.,],
-                    [0., 0., 0.,],
-                ],
-                [
-                    [.5, .5, .5,],
-                    [.5, .5, .5,],
-                    [.5, .5, .5,],
-                ],
-                [
-                    [1., 1., 1.,],
-                    [1., 1., 1.,],
-                    [1., 1., 1.,],
-                ],
-            ],
-        ]
-        src_space = 'FPC'
-        dst_space = 'RGB'
-
-        # Run test.
-        act = iw.convert_color_space(a, src_space, dst_space)
-
-        # Determine test result.
-        self.assertArrayEqual(exp, act)
-
-    def test_8bit_rgb_to_8bit_bgr(self):
-        """Given an array-like object of data in the 8-bit RGB color
-        space, return a numpy.ndarray object in the 8-bit BGR color
-        space.
-        """
-        # Expected result.
-        exp = np.array([
-            [
-                [
-                    [0x00, 0x7f, 0xff,],
-                    [0x00, 0x7f, 0xff,],
-                    [0x00, 0x7f, 0xff,],
-                ],
-                [
-                    [0xff, 0x00, 0x7f,],
-                    [0xff, 0x00, 0x7f,],
-                    [0xff, 0x00, 0x7f,],
-                ],
-                [
-                    [0x7f, 0xff, 0x00,],
-                    [0x7f, 0xff, 0x00,],
-                    [0x7f, 0xff, 0x00,],
-                ],
-            ],
-            [
-                [
-                    [0x00, 0x7f, 0xff,],
-                    [0x00, 0x7f, 0xff,],
-                    [0x00, 0x7f, 0xff,],
-                ],
-                [
-                    [0xff, 0x00, 0x7f,],
-                    [0xff, 0x00, 0x7f,],
-                    [0xff, 0x00, 0x7f,],
-                ],
-                [
-                    [0x7f, 0xff, 0x00,],
-                    [0x7f, 0xff, 0x00,],
-                    [0x7f, 0xff, 0x00,],
-                ],
-            ],
-        ], dtype=np.uint8)
-
-        # Test data and state.
-        a = [
-            [
-                [
-                    [0xff, 0x7f, 0x00,],
-                    [0xff, 0x7f, 0x00,],
-                    [0xff, 0x7f, 0x00,],
-                ],
-                [
-                    [0x7f, 0x00, 0xff,],
-                    [0x7f, 0x00, 0xff,],
-                    [0x7f, 0x00, 0xff,],
-                ],
-                [
-                    [0x00, 0xff, 0x7f,],
-                    [0x00, 0xff, 0x7f,],
-                    [0x00, 0xff, 0x7f,],
-                ],
-            ],
-            [
-                [
-                    [0xff, 0x7f, 0x00,],
-                    [0xff, 0x7f, 0x00,],
-                    [0xff, 0x7f, 0x00,],
-                ],
-                [
-                    [0x7f, 0x00, 0xff,],
-                    [0x7f, 0x00, 0xff,],
-                    [0x7f, 0x00, 0xff,],
-                ],
-                [
-                    [0x00, 0xff, 0x7f,],
-                    [0x00, 0xff, 0x7f,],
-                    [0x00, 0xff, 0x7f,],
-                ],
-            ],
-        ]
-        src_space = 'RGB'
-        dst_space = 'BGR'
-
-        # Run test.
-        act = iw.convert_color_space(a, src_space, dst_space)
-
-        # Determine test result.
-        self.assertArrayEqual(exp, act)
-
-    def test_8bit_rgb_to_float_grayscale(self):
-        """Given an array-like object of data in the 8-bit RGB color
-        space, return a numpy.ndarray object in the 8-bit RGB color
-        space. This uses a luminosity algorithm where the resulting
-        gray value is an uneven mix of the three color channels.
-        """
-        # Expected result.
-        exp = np.array([
-            [
-                [0.0, 0.498, 1.],
-                [0.0, 0.498, 1.],
-                [0.0, 0.498, 1.],
-            ],
-            [
-                [0.429, 0.569, 0.,],
-                [0.498, 0.498, 0.498],
-                [1., 1., 1.],
-            ],
-        ], dtype=float)
-
-        # Test data and state.
-        a = [
-            [
-                [
-                    [0x00, 0x00, 0x00,],
-                    [0x7f, 0x7f, 0x7f,],
-                    [0xff, 0xff, 0xff,],
-                ],
-                [
-                    [0x00, 0x00, 0x00,],
-                    [0x7f, 0x7f, 0x7f,],
-                    [0xff, 0xff, 0xff,],
-                ],
-                [
-                    [0x00, 0x00, 0x00,],
-                    [0x7f, 0x7f, 0x7f,],
-                    [0xff, 0xff, 0xff,],
-                ],
-            ],
-            [
-                [
-                    [0x00, 0x7f, 0xff,],
-                    [0xff, 0x7f, 0x00,],
-                    [0x00, 0x00, 0x00,],
-                ],
-                [
-                    [0x7f, 0x7f, 0x7f,],
-                    [0x7f, 0x7f, 0x7f,],
-                    [0x7f, 0x7f, 0x7f,],
-                ],
-                [
-                    [0xff, 0xff, 0xff,],
-                    [0xff, 0xff, 0xff,],
-                    [0xff, 0xff, 0xff,],
-                ],
-            ],
-        ]
-        src_space = 'RGB'
-        dst_space = 'FPG'
-
-        # Run test.
-        act = iw.convert_color_space(a, src_space, dst_space)
-
-        # Determine test result.
-        self.assertArrayEqual(exp, act)
-
-    def test_8bit_bgr_to_float_grayscale(self):
-        """Given an array-like object of data in the 8-bit BGR color
-        space, return a numpy.ndarray object in the floating point
-        grayscale color space. This uses a luminosity algorithm where
-        the resulting gray value is an uneven mix of the three color
-        channels.
-        """
-        # Expected result.
-        exp = np.array([
-            [
-                [0.0, 0.498, 1.],
-                [0.0, 0.498, 1.],
-                [0.0, 0.498, 1.],
-            ],
-            [
-                [0.569, 0.429, 0.,],
-                [0.498, 0.498, 0.498],
-                [1., 1., 1.],
-            ],
-        ], dtype=float)
-
-        # Test data and state.
-        a = [
-            [
-                [
-                    [0x00, 0x00, 0x00,],
-                    [0x7f, 0x7f, 0x7f,],
-                    [0xff, 0xff, 0xff,],
-                ],
-                [
-                    [0x00, 0x00, 0x00,],
-                    [0x7f, 0x7f, 0x7f,],
-                    [0xff, 0xff, 0xff,],
-                ],
-                [
-                    [0x00, 0x00, 0x00,],
-                    [0x7f, 0x7f, 0x7f,],
-                    [0xff, 0xff, 0xff,],
-                ],
-            ],
-            [
-                [
-                    [0x00, 0x7f, 0xff,],
-                    [0xff, 0x7f, 0x00,],
-                    [0x00, 0x00, 0x00,],
-                ],
-                [
-                    [0x7f, 0x7f, 0x7f,],
-                    [0x7f, 0x7f, 0x7f,],
-                    [0x7f, 0x7f, 0x7f,],
-                ],
-                [
-                    [0xff, 0xff, 0xff,],
-                    [0xff, 0xff, 0xff,],
-                    [0xff, 0xff, 0xff,],
-                ],
-            ],
-        ]
-        src_space = 'BGR'
-        dst_space = 'FPG'
-
-        # Run test.
-        act = iw.convert_color_space(a, src_space, dst_space)
-
-        # Determine test result.
-        self.assertArrayEqual(exp, act)
-
-    def test_8bit_grayscale_to_float_grayscale(self):
-        """Given an array-like object of data in the 8-bit grayscale
-        color space, return a numpy.ndarray in the float grayscale
-        space.
-        """
-        # Expected result.
-        exp = np.array([
-            [
-                [0., .498, 1.,],
-                [0., .498, 1.,],
-                [0., .498, 1.,],
-            ],
-            [
-                [0., 0., 0.,],
-                [.498, .498, .498,],
-                [1., 1., 1.,],
-            ],
-        ], dtype=float)
-
-        # Test data and state.
-        a = [
             [
                 [0x00, 0x7f, 0xff,],
                 [0x00, 0x7f, 0xff,],
                 [0x00, 0x7f, 0xff,],
             ],
+        ], dtype=np.uint8)
+        
+        # Test data and state.
+        a = [
             [
-                [0x00, 0x00, 0x00,],
-                [0x7f, 0x7f, 0x7f,],
-                [0xff, 0xff, 0xff,],
+                [0., .5, 1.1,],
+                [0., .5, 1.,],
+                [0., .5, 1.,],
             ],
         ]
-        src_space = 'L'
-        dst_space = 'FPG'
-
-        # Run test.
-        act = iw.convert_color_space(a, src_space, dst_space)
-
+        
         # Determine test result.
-        self.assertArrayEqual(exp, act)
-
-    def test_unsupported_source_color_space(self):
-        """If an unsupported source color space is given, raise a
-        ValueError exception."""
-        # Expected values.
-        exp_exception = ValueError
-        exp_msg = 'SPAM is not a supported color space.'
-
-        # Test data and state.
-        a = []
-        src_space = 'SPAM'
-        dst_space = 'L'
-
-        # Run test and determine result.
-        with self.assertRaisesRegex(exp_exception, exp_msg):
-            _ = iw.convert_color_space(a, src_space, dst_space)
-
-    def test_unsupported_destination_color_space(self):
-        """If an unsupported destination color space is given, raise a
-        ValueError exception."""
-        # Expected values.
-        exp_exception = ValueError
-        exp_msg = 'SPAM is not a supported color space.'
-
-        # Test data and state.
-        a = []
-        src_space = 'L'
-        dst_space = 'SPAM'
-
-        # Run test and determine result.
-        with self.assertRaisesRegex(exp_exception, exp_msg):
-            _ = iw.convert_color_space(a, src_space, dst_space)
+        with self.assertRaisesRegex(exp_ex, exp_msg):
+            
+            # Run test.
+            act = iw._float_to_uint8(a)
 
 
 class SaveImageTestCase(ut.TestCase):
+    # Utility methods.
     def assertArrayEqual(self, a, b):
         """Given two numpy.ndarray objects, raise an AssertionError if
         they are not equal.
@@ -522,6 +94,7 @@ class SaveImageTestCase(ut.TestCase):
         b_list = b.tolist()
         self.assertListEqual(a_list, b_list)
 
+    # Reused test code methods.
     @patch('cv2.imwrite')
     def save_8_bit_rgb(self, exp_path, mock_imwrite):
         """Given image data in the 8-bit RGB color space and a file
@@ -547,13 +120,12 @@ class SaveImageTestCase(ut.TestCase):
                 ],
             ],
         ]
-        space = 'RGB'
 
         # Expected value.
         exp_a = (np.array(a[0], dtype=np.uint8))
 
         # Run test.
-        iw.save_image(exp_path, a, space)
+        iw.save_image(exp_path, a)
 
         # Extract actual result.
         mock_imwrite.call_args
@@ -590,13 +162,28 @@ class SaveImageTestCase(ut.TestCase):
                 ],
             ],
         ]
-        space = 'RGB'
 
         # Expected value.
-        exp_a = np.array(a[0], dtype=float)
+        exp_a = np.array([
+            [
+                [0xff, 0x7f, 0x00,],
+                [0xff, 0x7f, 0x00,],
+                [0xff, 0x7f, 0x00,],
+            ],
+            [
+                [0x7f, 0x00, 0xff,],
+                [0x7f, 0x00, 0xff,],
+                [0x7f, 0x00, 0xff,],
+            ],
+            [
+                [0x00, 0xff, 0x7f,],
+                [0x00, 0xff, 0x7f,],
+                [0x00, 0xff, 0x7f,],
+            ],
+        ], dtype=np.uint8)
         
         # Run test.
-        iw.save_image(exp_path, a, space)
+        iw.save_image(exp_path, a)
 
         # Extract actual result.
         mock_imwrite.call_args
@@ -607,12 +194,11 @@ class SaveImageTestCase(ut.TestCase):
         # Determine test result.
         self.assertEqual(exp_path, act_path)
         self.assertArrayEqual(exp_a, act_a)
-    
+
     @patch('cv2.imwrite')
-    def test_save_fpg_as_jpeg(self, mock_imwrite):
+    def save_fpg(self, exp_path, mock_imwrite):
         """Given image data in the floating point grayscale color
-        space and a file path, save the image data to the file path
-        as a JPEG file.
+        space and a file path, save the image data to the file path.
         """
         # Test data and state.
         a = [
@@ -622,14 +208,12 @@ class SaveImageTestCase(ut.TestCase):
                 [0., .5, 1.,],
             ],
         ]
-        space = 'FPG'
 
         # Expected value.
-        exp_path = 'spam.jpg'
         exp_a = (np.array(a[0]) * 0xff).astype(np.uint8)
 
         # Run test.
-        iw.save_image(exp_path, a, space)
+        iw.save_image(exp_path, a)
 
         # Extract actual result.
         mock_imwrite.call_args
@@ -642,13 +226,13 @@ class SaveImageTestCase(ut.TestCase):
         self.assertArrayEqual(exp_a, act_a)
 
     @patch('cv2.imwrite')
-    def test_save_fpg_as_multiple_jpeg(self, mock_imwrite):
+    def save_fpg_as_multiple_files(self, filetype, mock_imwrite):
         """Given three dimensionalimage data in the floating point
         grayscale color space and a file path, save the image data
-        to the file path as a JPEG file.
+        to the file path.
         """
         # Test data and state.
-        filepath = 'spam.jpg'
+        filepath = f'spam.{filetype}'
         a = [
             [
                 [0., .5, 1.,],
@@ -661,15 +245,14 @@ class SaveImageTestCase(ut.TestCase):
                 [0., .5, 1.,],
             ],
         ]
-        space = 'FPG'
 
         # Expected value.
-        exp_path_0 = 'spam_0.jpg'
-        exp_path_1 = 'spam_1.jpg'
+        exp_path_0 = f'spam_0.{filetype}'
+        exp_path_1 = f'spam_1.{filetype}'
         exp_a = (np.array(a[0]) * 0xff).astype(np.uint8)
 
         # Run test.
-        iw.save_image(filepath, a, space)
+        iw.save_image(filepath, a)
 
         # Extract actual result.
         mock_imwrite.call_args
@@ -686,9 +269,9 @@ class SaveImageTestCase(ut.TestCase):
         self.assertArrayEqual(exp_a, act_a_1)
 
     @patch('cv2.imwrite')
-    def test_save_l_as_jpeg(self, mock_imwrite):
+    def save_l(self, filetype, mock_imwrite):
         """Given image data in the 8-bit grayscale color space and a
-        file path, save the image data to the file path as a JPEG file.
+        file path, save the image data to the file path.
         """
         # Test data and state.
         a = [
@@ -698,14 +281,13 @@ class SaveImageTestCase(ut.TestCase):
                 [0x00, 0x7f, 0xff],
             ],
         ]
-        space = 'L'
 
         # Expected value.
-        exp_path = 'spam.jpg'
+        exp_path = f'spam.{filetype}'
         exp_a = (np.array(a[0], dtype=np.uint8))
 
         # Run test.
-        iw.save_image(exp_path, a, space)
+        iw.save_image(exp_path, a)
 
         # Extract actual result.
         mock_imwrite.call_args
@@ -717,30 +299,204 @@ class SaveImageTestCase(ut.TestCase):
         self.assertEqual(exp_path, act_path)
         self.assertArrayEqual(exp_a, act_a)
 
-    @patch('cv2.imwrite')
-    def test_save_8_bit_rgb_as_jpeg(self, mock_imwrite):
+    # Test methods.
+    def test_save_8_bit_rgb_as_jpeg(self):
         """Given image data in the 8-bit RGB color space and a file
         path, save the image data to the file path as a JPEG file.
         """
         self.save_8_bit_rgb('spam.jpg')
 
-    @patch('cv2.imwrite')
-    def test_save_8_bit_rgb_as_png(self, mock_imwrite):
+    def test_save_8_bit_rgb_as_png(self):
         """Given image data in the 8-bit RGB color space and a file
         path, save the image data to the file path as a PNG file.
         """
         self.save_8_bit_rgb('spam.png')
 
-    @patch('cv2.imwrite')
-    def test_save_8_bit_rgb_as_tiff(self, mock_imwrite):
+    def test_save_8_bit_rgb_as_tiff(self):
         """Given image data in the 8-bit RGB color space and a file
-        path, save the image data to the file path as a PNG file.
+        path, save the image data to the file path as a TIFF file.
         """
         self.save_8_bit_rgb('spam.tiff')
 
-    @patch('cv2.imwrite')
-    def test_save_float_rgb_as_tiff(self, mock_imwrite):
+    def test_save_float_rgb_as_jpg(self):
+        """Given image data in the 8-bit RGB color space and a file
+        path, save the image data to the file path as a JPG file.
+        """
+        self.save_float_rgb('spam.jpg')
+
+    def test_save_float_rgb_as_png(self):
         """Given image data in the 8-bit RGB color space and a file
         path, save the image data to the file path as a PNG file.
         """
+        self.save_float_rgb('spam.png')
+
+    def test_save_float_rgb_as_tiff(self):
+        """Given image data in the 8-bit RGB color space and a file
+        path, save the image data to the file path as a TIFF file.
+        """
         self.save_float_rgb('spam.tiff')
+
+    def test_save_fpg_as_jpeg(self):
+        """Given image data in the floating point grayscale color
+        space and a file path, save the image data to the file path
+        as a JPEG file.
+        """
+        self.save_fpg('spam.jpg')
+
+    def test_save_fpg_as_png(self):
+        """Given image data in the floating point grayscale color
+        space and a file path, save the image data to the file path
+        as a PNG file.
+        """
+        self.save_fpg('spam.png')
+
+    def test_save_fpg_as_tiff(self):
+        """Given image data in the floating point grayscale color
+        space and a file path, save the image data to the file path
+        as a TIFF file.
+        """
+        self.save_fpg('spam.tiff')
+
+    def test_save_fpg_as_multiple_jpeg(self):
+        """Given three dimensionalimage data in the floating point
+        grayscale color space and a file path, save the image data
+        to the file path as a JPEG file.
+        """
+        self.save_fpg_as_multiple_files('jpg')
+
+    def test_save_fpg_as_multiple_png(self):
+        """Given three dimensionalimage data in the floating point
+        grayscale color space and a file path, save the image data
+        to the file path as a JPEG file.
+        """
+        self.save_fpg_as_multiple_files('png')
+
+    def test_save_fpg_as_multiple_tiff(self):
+        """Given three dimensionalimage data in the floating point
+        grayscale color space and a file path, save the image data
+        to the file path as a JPEG file.
+        """
+        self.save_fpg_as_multiple_files('tiff')
+
+    def test_save_l_as_jpeg(self):
+        """Given image data in the 8-bit grayscale color space and a
+        file path, save the image data to the file path as a JPEG file.
+        """
+        self.save_l('jpg')
+
+    def test_save_l_as_png(self):
+        """Given image data in the 8-bit grayscale color space and a
+        file path, save the image data to the file path as a PNG file.
+        """
+        self.save_l('png')
+
+    def test_save_l_as_tiff(self):
+        """Given image data in the 8-bit grayscale color space and a
+        file path, save the image data to the file path as a TIFF file.
+        """
+        self.save_l('tiff')
+
+
+class SaveVideoTestCase(ut.TestCase):
+    # Utility methods.
+    def assertArrayEqual(self, a, b):
+        """Given two numpy.ndarray objects, raise an AssertionError if
+        they are not equal.
+        """
+        a_list = a.tolist()
+        b_list = b.tolist()
+        self.assertListEqual(a_list, b_list)
+
+    def test_save_rgb_video(self):
+        """Given image data in the RGB color space, save the data
+        as an MP4 video file.
+        """
+        # Expected result.
+        with open('./tests/data/__spam.mp4', 'rb') as fh:
+            exp = fh.read()
+        
+        # Test data and state.
+        a = [
+            [
+                [
+                    [0x00, 0x7f, 0xff],
+                    [0x00, 0x7f, 0xff],
+                    [0x00, 0x7f, 0xff],
+                    [0x00, 0x7f, 0xff],
+                ],
+                [
+                    [0x7f, 0xff, 0x00],
+                    [0x7f, 0xff, 0x00],
+                    [0x7f, 0xff, 0x00],
+                    [0x7f, 0xff, 0x00],
+                ],
+                [
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                ],
+            ],
+            [
+                [
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                ],
+                [
+                    [0x00, 0x7f, 0xff],
+                    [0x00, 0x7f, 0xff],
+                    [0x00, 0x7f, 0xff],
+                    [0x00, 0x7f, 0xff],
+                ],
+                [
+                    [0x7f, 0xff, 0x00],
+                    [0x7f, 0xff, 0x00],
+                    [0x7f, 0xff, 0x00],
+                    [0x7f, 0xff, 0x00],
+                ],
+            ],
+            [
+                [
+                    [0x7f, 0xff, 0x00],
+                    [0x7f, 0xff, 0x00],
+                    [0x7f, 0xff, 0x00],
+                    [0x7f, 0xff, 0x00],
+                ],
+                [
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                ],
+                [
+                    [0x00, 0x7f, 0xff],
+                    [0x00, 0x7f, 0xff],
+                    [0x00, 0x7f, 0xff],
+                    [0x00, 0x7f, 0xff],
+                ],
+            ],
+        ]
+        filepath = '__spam.mp4'
+        fourcc = 1983148141
+        framerate = 12
+        framesize = (4, 3)
+        iscolor = True
+        
+        # Expected results.
+        exp_a = np.flip(np.array(a, dtype=np.uint8), -1)
+        
+        # Run test.
+        _ = iw.save_video(filepath, a)
+        
+        # Extract actual result.
+        with open(filepath, 'rb') as fh:
+            act = fh.read()
+        
+        # Determine test result.
+        self.assertEqual(exp, act)
+        
+        # Clean up test.
+        os.remove(filepath)
+            
