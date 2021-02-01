@@ -478,6 +478,7 @@ class SaveVideoTestCase(ut.TestCase):
                 ],
             ],
         ]
+        a = [[[[np.uint8(c) for c in x] for x in y] for y in z] for z in a]
         filepath = '__spam.mp4'
         fourcc = 1983148141
         framerate = 12
@@ -488,15 +489,66 @@ class SaveVideoTestCase(ut.TestCase):
         exp_a = np.flip(np.array(a, dtype=np.uint8), -1)
         
         # Run test.
-        _ = iw.save_video(filepath, a)
+        try:
+            _ = iw.save_video(filepath, a)
         
-        # Extract actual result.
-        with open(filepath, 'rb') as fh:
-            act = fh.read()
+            # Extract actual result.
+            with open(filepath, 'rb') as fh:
+                act = fh.read()
         
-        # Determine test result.
-        self.assertEqual(exp, act)
+            # Determine test result.
+            self.assertEqual(exp, act)
         
         # Clean up test.
-        os.remove(filepath)
-            
+        finally:
+            os.remove(filepath)
+
+    def test_save_fpg_video(self):
+        """Given image data in the floating point grayscale color
+        space, save the data as an MP4 video file.
+        """
+        # Expected result.
+        filepath = '__test_save_fpg_video.mp4'
+        with open(f'./tests/data/{filepath}', 'rb') as fh:
+            exp = fh.read()
+        
+        # Test data and state.
+        a = [
+            [
+                [0., .5, 1.,],
+                [0., .5, 1.,],
+                [0., .5, 1.,],
+            ],
+            [
+                [1., 0., .5,],
+                [1., 0., .5,],
+                [1., 0., .5,],
+            ],
+            [
+                [.5, 1., 0.,],
+                [.5, 1., 0.,],
+                [.5, 1., 0.,],
+            ],
+        ]
+        fourcc = 1983148141
+        framerate = 12
+        framesize = (4, 3)
+        iscolor = True
+        
+        # Expected results.
+        exp_a = np.flip(np.array(a, dtype=np.uint8), -1)
+        
+        # Run test.
+        try:
+            _ = iw.save_video(filepath, a)
+        
+            # Extract actual result.
+            with open(filepath, 'rb') as fh:
+                act = fh.read()
+        
+            # Determine test result.
+            self.assertEqual(exp, act)
+        
+        # Clean up test.
+        finally:
+            os.remove(filepath)

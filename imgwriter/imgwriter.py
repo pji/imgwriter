@@ -55,15 +55,17 @@ def save_image(filepath: str, a: ArrayLike) -> None:
 
 def save_video(filepath: str, a: ArrayLike, framerate: float = 12) -> None:
     a = np.array(a)
-    if a.dtype != np.uint8:
-        a = a.astype(np.uint8)
-    bgr_a = np.flip(a, -1)
+    if a.dtype in [float, np.float32]:
+        a = _float_to_uint8(a)
 
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     framesize = (a.shape[X], a.shape[Y])
-    iscolor = True
+    iscolor = False
+    if len(a.shape) == 4:
+        a = np.flip(a, -1)
+        iscolor = True
 
     vwriter = cv2.VideoWriter(filepath, fourcc, framerate, framesize, iscolor)
     for i in range(a.shape[Z]):
-        vwriter.write(bgr_a[i])
+        vwriter.write(a[i])
     vwriter.release()
