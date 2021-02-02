@@ -123,6 +123,7 @@ class SaveImageTestCase(ut.TestCase):
 
         # Expected value.
         exp_a = (np.array(a[0], dtype=np.uint8))
+        exp_a = np.flip(exp_a, -1)
 
         # Run test.
         iw.save_image(exp_path, a)
@@ -181,6 +182,7 @@ class SaveImageTestCase(ut.TestCase):
                 [0x00, 0xff, 0x7f,],
             ],
         ], dtype=np.uint8)
+        exp_a = np.flip(exp_a, -1)
         
         # Run test.
         iw.save_image(exp_path, a)
@@ -407,90 +409,74 @@ class SaveVideoTestCase(ut.TestCase):
         b_list = b.tolist()
         self.assertListEqual(a_list, b_list)
 
-    def test_save_rgb_video(self):
-        """Given image data in the RGB color space, save the data
-        as an MP4 video file.
+    def save_fpc_video(self, ftype, codec='mp4v'):
+        """Given image data in the floating point grayscale color
+        space, save the data as a video file.
         """
         # Expected result.
-        with open('./tests/data/__spam.mp4', 'rb') as fh:
+        filepath = f'__test_save_fpc_video.{ftype}'
+        with open(f'./tests/data/{filepath}', 'rb') as fh:
             exp = fh.read()
         
         # Test data and state.
         a = [
             [
                 [
-                    [0x00, 0x7f, 0xff],
-                    [0x00, 0x7f, 0xff],
-                    [0x00, 0x7f, 0xff],
-                    [0x00, 0x7f, 0xff],
+                    [1., .5, 0.,],
+                    [1., .5, 0.,],
+                    [1., .5, 0.,],
                 ],
                 [
-                    [0x7f, 0xff, 0x00],
-                    [0x7f, 0xff, 0x00],
-                    [0x7f, 0xff, 0x00],
-                    [0x7f, 0xff, 0x00],
+                    [.5, 0., 1.,],
+                    [.5, 0., 1.,],
+                    [.5, 0., 1.,],
                 ],
                 [
-                    [0xff, 0x00, 0x7f,],
-                    [0xff, 0x00, 0x7f,],
-                    [0xff, 0x00, 0x7f,],
-                    [0xff, 0x00, 0x7f,],
+                    [0., 1., .5,],
+                    [0., 1., .5,],
+                    [0., 1., .5,],
                 ],
             ],
             [
                 [
-                    [0xff, 0x00, 0x7f,],
-                    [0xff, 0x00, 0x7f,],
-                    [0xff, 0x00, 0x7f,],
-                    [0xff, 0x00, 0x7f,],
+                    [0., 1., .5,],
+                    [0., 1., .5,],
+                    [0., 1., .5,],
                 ],
                 [
-                    [0x00, 0x7f, 0xff],
-                    [0x00, 0x7f, 0xff],
-                    [0x00, 0x7f, 0xff],
-                    [0x00, 0x7f, 0xff],
+                    [1., .5, 0.,],
+                    [1., .5, 0.,],
+                    [1., .5, 0.,],
                 ],
                 [
-                    [0x7f, 0xff, 0x00],
-                    [0x7f, 0xff, 0x00],
-                    [0x7f, 0xff, 0x00],
-                    [0x7f, 0xff, 0x00],
+                    [.5, 0., 1.,],
+                    [.5, 0., 1.,],
+                    [.5, 0., 1.,],
                 ],
             ],
             [
                 [
-                    [0x7f, 0xff, 0x00],
-                    [0x7f, 0xff, 0x00],
-                    [0x7f, 0xff, 0x00],
-                    [0x7f, 0xff, 0x00],
+                    [.5, 0., 1.,],
+                    [.5, 0., 1.,],
+                    [.5, 0., 1.,],
                 ],
                 [
-                    [0xff, 0x00, 0x7f,],
-                    [0xff, 0x00, 0x7f,],
-                    [0xff, 0x00, 0x7f,],
-                    [0xff, 0x00, 0x7f,],
+                    [0., 1., .5,],
+                    [0., 1., .5,],
+                    [0., 1., .5,],
                 ],
                 [
-                    [0x00, 0x7f, 0xff],
-                    [0x00, 0x7f, 0xff],
-                    [0x00, 0x7f, 0xff],
-                    [0x00, 0x7f, 0xff],
+                    [1., .5, 0.,],
+                    [1., .5, 0.,],
+                    [1., .5, 0.,],
                 ],
             ],
         ]
-        a = [[[[np.uint8(c) for c in x] for x in y] for y in z] for z in a]
-        filepath = '__spam.mp4'
-        fourcc = 1983148141
         framerate = 12
-        framesize = (4, 3)
-        iscolor = True
-        
-        # Expected results.
-        exp_a = np.flip(np.array(a, dtype=np.uint8), -1)
         
         # Run test.
         try:
-            _ = iw.save_video(filepath, a)
+            _ = iw.save_video(filepath, a, framerate, codec)
         
             # Extract actual result.
             with open(filepath, 'rb') as fh:
@@ -503,12 +489,12 @@ class SaveVideoTestCase(ut.TestCase):
         finally:
             os.remove(filepath)
 
-    def test_save_fpg_video(self):
+    def save_fpg_video(self, ftype, codec='mp4v'):
         """Given image data in the floating point grayscale color
-        space, save the data as an MP4 video file.
+        space, save the data aa a video file.
         """
         # Expected result.
-        filepath = '__test_save_fpg_video.mp4'
+        filepath = f'__test_save_fpg_video.{ftype}'
         with open(f'./tests/data/{filepath}', 'rb') as fh:
             exp = fh.read()
         
@@ -530,17 +516,11 @@ class SaveVideoTestCase(ut.TestCase):
                 [.5, 1., 0.,],
             ],
         ]
-        fourcc = 1983148141
         framerate = 12
-        framesize = (4, 3)
-        iscolor = True
-        
-        # Expected results.
-        exp_a = np.flip(np.array(a, dtype=np.uint8), -1)
         
         # Run test.
         try:
-            _ = iw.save_video(filepath, a)
+            _ = iw.save_video(filepath, a, framerate, codec)
         
             # Extract actual result.
             with open(filepath, 'rb') as fh:
@@ -552,3 +532,129 @@ class SaveVideoTestCase(ut.TestCase):
         # Clean up test.
         finally:
             os.remove(filepath)
+
+    def save_rgb_video(self, ftype, codec='mp4v'):
+        """Given image data in the RGB color space, save the data
+        as a video file.
+        """
+        # Expected result.
+        filepath = f'__test_save_rgb_video.{ftype}'
+        with open(f'./tests/data/{filepath}', 'rb') as fh:
+            exp = fh.read()
+        
+        # Test data and state.
+        a = [
+            [
+                [
+                    [0x00, 0x7f, 0xff],
+                    [0x00, 0x7f, 0xff],
+                    [0x00, 0x7f, 0xff],
+                    [0x00, 0x7f, 0xff],
+                ],
+                [
+                    [0x7f, 0xff, 0x00],
+                    [0x7f, 0xff, 0x00],
+                    [0x7f, 0xff, 0x00],
+                    [0x7f, 0xff, 0x00],
+                ],
+                [
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                ],
+            ],
+            [
+                [
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                ],
+                [
+                    [0x00, 0x7f, 0xff],
+                    [0x00, 0x7f, 0xff],
+                    [0x00, 0x7f, 0xff],
+                    [0x00, 0x7f, 0xff],
+                ],
+                [
+                    [0x7f, 0xff, 0x00],
+                    [0x7f, 0xff, 0x00],
+                    [0x7f, 0xff, 0x00],
+                    [0x7f, 0xff, 0x00],
+                ],
+            ],
+            [
+                [
+                    [0x7f, 0xff, 0x00],
+                    [0x7f, 0xff, 0x00],
+                    [0x7f, 0xff, 0x00],
+                    [0x7f, 0xff, 0x00],
+                ],
+                [
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                ],
+                [
+                    [0x00, 0x7f, 0xff],
+                    [0x00, 0x7f, 0xff],
+                    [0x00, 0x7f, 0xff],
+                    [0x00, 0x7f, 0xff],
+                ],
+            ],
+        ]
+        framerate = 12
+        
+        # Run test.
+        try:
+            _ = iw.save_video(filepath, a, framerate, codec)
+        
+            # Extract actual result.
+            with open(filepath, 'rb') as fh:
+                act = fh.read()
+        
+            # Determine test result.
+            self.assertEqual(exp, act)
+        
+        # Clean up test.
+        finally:
+            os.remove(filepath)
+
+    # Test methods.
+    def test_save_fpc_video_as_avi(self):
+        """Given image data in the floating point grayscale color
+        space, save the data as an AVI video file.
+        """
+        self.save_fpc_video('avi', 'MJPG')
+
+    def test_save_fpc_video_as_mp4(self):
+        """Given image data in the floating point grayscale color
+        space, save the data as an MP4 video file.
+        """
+        self.save_fpc_video('mp4')
+
+    def test_save_fpg_video_as_avi(self):
+        """Given image data in the floating point grayscale color
+        space, save the data as an AVI video file.
+        """
+        self.save_fpg_video('avi', 'MJPG')
+
+    def test_save_fpg_video_as_mp4(self):
+        """Given image data in the floating point grayscale color
+        space, save the data as an MP4 video file.
+        """
+        self.save_fpg_video('mp4')
+
+    def test_save_rgb_video_as_avi(self):
+        """Given image data in the RGB color space, save the data
+        as an AVI video file.
+        """
+        self.save_rgb_video('avi', 'MJPG')
+
+    def test_save_rgb_video_as_mp4(self):
+        """Given image data in the RGB color space, save the data
+        as an MP4 video file.
+        """
+        self.save_rgb_video('mp4')

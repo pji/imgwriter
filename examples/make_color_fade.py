@@ -1,8 +1,8 @@
 """
-make_spacer
-~~~~~~~~~~~
+make_color_fade
+~~~~~~~~~~~~~~~
 
-Create a black JPG that can be used as a spacer in a video.
+Create a video that fades from one color to another.
 """
 import argparse
 import numpy as np
@@ -10,6 +10,7 @@ import numpy as np
 import imgwriter as iw
 
 
+R, G, B = 0, 1, 2
 RESOLUTIONS = {
     'dv_ntsc': (720, 480),
     'd1_ntsc': (720, 486),
@@ -50,37 +51,75 @@ def get_channels(color: str) -> tuple[int, int, int]:
 
 def main(filepath: str,
          res: tuple[int, int],
-         color: tuple[int, int, int]) -> None:
-    """Create a color image that can be used as a spacer in a video.
+         start_color: tuple[int, int, int],
+         end_color: tuple[int, int, int],
+         frames: int,
+         framerate: float) -> None:
+    """Create a video that fades from one color to another.
     
     :param filepath: The location to save the spacer image.
     :param res: The resolution of the image. This is a tuple of the
         form (x, y), where "x" is the width of the image in pixels and
         "y" is the height of the image in pixels.
-    :param color: The color of the image. This is a tuple of integers
+    :param start_color: This is a tuple of integers
         representing the amounts of red, green, and blue (in that
-        order) are contained in the color.
+        order) are contained in the starting color of the fade.
+    :param end_color: This is a tuple of integers
+        representing the amounts of red, green, and blue (in that
+        order) are contained in the final color of the fade.
+    :param frames: The number of frames for the transition.
+    :param framerate: The frame rate of the video.
     :return: None.
     :rtype: None.
     """
-    # Create the array of image data for the spacer image.
-    a = np.zeros((1, *res[::-1], 3), dtype=int)
-    for c in 0, 1, 2:
-        a[:, :, :, c] = color[c]
+    # Create the array of image data for the fade.
+    diff_inc = [-1 * (s - e) / frames for s, e in zip(start_color, end_color)]
+    a = np.indices((frames, *res[::-1], 3), dtype=np.float32)[0]
+    for c in R, G, B:
+        a[:, :, :, c] *= diff_inc[c]
+        a[:, :, :, c] += start_color[c]
+    a = a.astype(np.uint8)
     
-    # Send that image and the save location to imagewriter.save_image.
-    iw.save_image(filepath, a)
+    # Send that image and the save location to imagewriter.save_video.
+    iw.save_video(filepath, a, framerate)
 
 
 if __name__ == '__main__':
     # Define the command line options.
     options = {
+        'end_color': {
+            'args': ('-e', '--end_color',),
+            'kwargs': {
+                'type': str,
+                'action': 'store',
+                'help': 'The color of the last frame in 24-bit hex.',
+                'default': '000000'
+            }
+        },
         'filepath': {
             'args': ('filepath',),
             'kwargs': {
                 'type': str,
                 'action': 'store',
                 'help': 'Where to save the spacer image.',
+            }
+        },
+        'framerate': {
+            'args': ('-f', '--framerate'),
+            'kwargs': {
+                'type': int,
+                'action': 'store',
+                'help': 'The frame rate of the fade.',
+                'default': 24,
+            }
+        },
+        'length': {
+            'args': ('-l', '--length'),
+            'kwargs': {
+                'type': int,
+                'action': 'store',
+                'help': 'The number of frames for the fade.',
+                'default': 72,
             }
         },
         'resolution': {
@@ -92,21 +131,21 @@ if __name__ == '__main__':
                 'default': '720p'
             }
         },
-        'color': {
-            'args': ('-c', '--color',),
+        'start_color': {
+            'args': ('-s', '--start_color',),
             'kwargs': {
                 'type': str,
                 'action': 'store',
-                'help': 'The color of the frame in 24-bit hex.',
-                'default': '000000'
+                'help': 'The color of the first frame in 24-bit hex.',
+                'default': 'ffffff'
             }
         },
     }
 
     # Read the command line arguments.
     p = argparse.ArgumentParser(
-        prog='make_spacer.py',
-        description='Create a spacer image for video.',
+        prog='make_color_fade.py',
+        description='Create a video of a color fade.',
     )
     for option in options:
         args = options[option]['args']
@@ -116,6 +155,12 @@ if __name__ == '__main__':
     
     # Create the spacer image.
     res = RESOLUTIONS[args.resolution]
-    color = get_channels(args.color)
-    main(args.filepath, res, color)
+    start_color = get_channels(args.start_color)
+    end_color = get_channels(args.end_color)
+    main(args.filepath, 
+         res, 
+         start_color, 
+         end_color, 
+         args.length, 
+         args.framerate)
     
