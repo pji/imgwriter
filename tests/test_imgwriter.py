@@ -6,7 +6,7 @@ Unit tests for the imgwriter.imgwriter module.
 """
 import os
 import unittest as ut
-from unittest.mock import call, patch
+from unittest.mock import call, MagicMock, patch
 
 import numpy as np
 
@@ -84,6 +84,146 @@ class FloatToUint8TestCase(ut.TestCase):
             act = iw._float_to_uint8(a)
 
 
+class SaveTestCase(ut.TestCase):
+    # Reused test code methods.
+    @patch('imgwriter.imgwriter.save_image')
+    def save_image(self, filetype, mock_si):
+        """Given a file path with an image file type, send the image
+        data to be saved as an image file.
+        """
+        # Expected value.
+        exp_a = [
+            [
+                [
+                    [0xff, 0x7f, 0x00,],
+                    [0xff, 0x7f, 0x00,],
+                    [0xff, 0x7f, 0x00,],
+                ],
+                [
+                    [0x7f, 0x00, 0xff,],
+                    [0x7f, 0x00, 0xff,],
+                    [0x7f, 0x00, 0xff,],
+                ],
+                [
+                    [0x00, 0xff, 0x7f,],
+                    [0x00, 0xff, 0x7f,],
+                    [0x00, 0xff, 0x7f,],
+                ],
+            ],
+        ]
+        exp_path = f'spam.{filetype}'
+        
+        # Run test.
+        iw.save(exp_path, exp_a)
+
+        # Extract actual result.
+        args = mock_si.call_args.args
+        act_path = args[0]
+        act_a = args[1]
+
+        # Determine test result.
+        self.assertEqual(exp_path, act_path)
+        self.assertListEqual(exp_a, act_a)
+    
+    @patch('imgwriter.imgwriter.save_video')
+    def save_video(self, filetype, mock_sv):
+        """Given a file path with a video file type, send the image
+        data to be saved as an video file.
+        """
+        # Expected value.
+        exp_a = [
+            [
+                [
+                    [0x00, 0x7f, 0xff],
+                    [0x00, 0x7f, 0xff],
+                    [0x00, 0x7f, 0xff],
+                    [0x00, 0x7f, 0xff],
+                ],
+                [
+                    [0x7f, 0xff, 0x00],
+                    [0x7f, 0xff, 0x00],
+                    [0x7f, 0xff, 0x00],
+                    [0x7f, 0xff, 0x00],
+                ],
+                [
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                ],
+            ],
+            [
+                [
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                ],
+                [
+                    [0x00, 0x7f, 0xff],
+                    [0x00, 0x7f, 0xff],
+                    [0x00, 0x7f, 0xff],
+                    [0x00, 0x7f, 0xff],
+                ],
+                [
+                    [0x7f, 0xff, 0x00],
+                    [0x7f, 0xff, 0x00],
+                    [0x7f, 0xff, 0x00],
+                    [0x7f, 0xff, 0x00],
+                ],
+            ],
+            [
+                [
+                    [0x7f, 0xff, 0x00],
+                    [0x7f, 0xff, 0x00],
+                    [0x7f, 0xff, 0x00],
+                    [0x7f, 0xff, 0x00],
+                ],
+                [
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                    [0xff, 0x00, 0x7f,],
+                ],
+                [
+                    [0x00, 0x7f, 0xff],
+                    [0x00, 0x7f, 0xff],
+                    [0x00, 0x7f, 0xff],
+                    [0x00, 0x7f, 0xff],
+                ],
+            ],
+        ]
+        exp_framerate = 12
+        exp_path = f'spam.{filetype}'
+        
+        # Run test.
+        iw.save(exp_path, exp_a, exp_framerate)
+
+        # Extract actual result.
+        args = mock_sv.call_args.args
+        act_path = args[0]
+        act_a = args[1]
+        act_framerate = args[2]
+
+        # Determine test result.
+        self.assertEqual(exp_path, act_path)
+        self.assertListEqual(exp_a, act_a)
+        self.assertEqual(exp_framerate, act_framerate)
+    
+    # Test methods.
+    def test_save_as_jpg(self):
+        """Given a filepath with the filetype "jpg", save the image
+        data as a JPEG image file.
+        """
+        self.save_image('jpg')
+
+    def test_save_as_mp4(self):
+        """Given a filepath with the filetype "jpg", save the image
+        data as a JPEG image file.
+        """
+        self.save_video('mp4')
+
+
 class SaveImageTestCase(ut.TestCase):
     # Utility methods.
     def assertArrayEqual(self, a, b):
@@ -129,7 +269,6 @@ class SaveImageTestCase(ut.TestCase):
         iw.save_image(exp_path, a)
 
         # Extract actual result.
-        mock_imwrite.call_args
         args = mock_imwrite.call_args.args
         act_path = args[0]
         act_a = args[1]

@@ -70,6 +70,25 @@ def _float_to_uint8(a: ArrayLike) -> np.ndarray:
     return a.astype(np.uint8)
 
 
+def save(filepath: str, a: ArrayLike, *args, **kwargs) -> None:
+    """Save an array of image data to file.
+
+    :param filepath: The location and name of the file that will
+        be saved. The file extension will determine the format used
+        by the file.
+    :param a: The array of image data.
+    :return: None.
+    :rtype: None.
+    """
+    filetype = filepath.split('.')[-1]
+    save_as = SUPPORTED_TYPES[filetype]
+    if save_as == 'image':
+        save_fn = save_image
+    else:
+        save_fn = save_video
+    save_fn(filepath, a, *args, **kwargs)
+
+
 @converted
 def save_image(filepath: str, a: ArrayLike) -> None:
     """Save an array of image data as an image file.
@@ -130,3 +149,11 @@ def save_video(filepath: str,
     for i in range(a.shape[Z]):
         vwriter.write(a[i])
     vwriter.release()
+
+
+# Register supported types.
+SUPPORTED_TYPES = {
+    'jpg': 'image',
+    'jpeg': 'image',
+    'mp4': 'video',
+}
