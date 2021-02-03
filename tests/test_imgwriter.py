@@ -217,9 +217,27 @@ class SaveTestCase(ut.TestCase):
         """
         self.save_image('jpg')
 
-    def test_save_as_mp4(self):
-        """Given a filepath with the filetype "jpg", save the image
+    def test_save_as_png(self):
+        """Given a filepath with the filetype "png", save the image
+        data as a PNG image file.
+        """
+        self.save_image('png')
+
+    def test_save_as_tiff(self):
+        """Given a filepath with the filetype "tiff", save the image
         data as a JPEG image file.
+        """
+        self.save_image('tiff')
+
+    def test_save_as_avi(self):
+        """Given a filepath with the filetype "avi", save the image
+        data as a AVI video file.
+        """
+        self.save_video('avi')
+
+    def test_save_as_mp4(self):
+        """Given a filepath with the filetype "mp4", save the image
+        data as a MP4 image file.
         """
         self.save_video('mp4')
 
@@ -234,7 +252,7 @@ class SaveImageTestCase(ut.TestCase):
         b_list = b.tolist()
         self.assertListEqual(a_list, b_list)
 
-    # Reused test code methods.
+    # Reused test code.
     @patch('cv2.imwrite')
     def save_8_bit_rgb(self, exp_path, mock_imwrite):
         """Given image data in the 8-bit RGB color space and a file

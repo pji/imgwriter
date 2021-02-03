@@ -69,7 +69,7 @@ def main(filepath: str,
         a[:, :, :, c] = color[c]
     
     # Send that image and the save location to imagewriter.save_image.
-    iw.save_image(filepath, a)
+    iw.save(filepath, a)
 
 
 if __name__ == '__main__':

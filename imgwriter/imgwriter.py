@@ -19,11 +19,26 @@ import numpy as np
 # the data will be converted to an ndarray, which may have
 # consequences.
 ArrayLike = Any
+
+# Register supported types. This is also used to determine whether the
+# user is trying to save data as a still image or video.
+SUPPORTED_TYPES = {
+    'avi': 'video',
+    'jpg': 'image',
+    'jpeg': 'image',
+    'mp4': 'video',
+    'png': 'image',
+    'tif': 'image',
+    'tiff': 'image',
+}
+
+# Constants to replace indices with axis names for readability.
 X, Y, Z = 2, 1, 0
 
 
 # Decorators
-def converted(fn: Callable) -> Callable:
+def uses_opencv(fn: Callable) -> Callable:
+    """Condition the image data for use by opencv prior to saving."""
     @wraps(fn)
     def wrapper(filepath: str, a: ArrayLike, *args, **kwargs) -> np.ndarray:
         # Convert the image data to an array just in case we were passed
@@ -89,7 +104,7 @@ def save(filepath: str, a: ArrayLike, *args, **kwargs) -> None:
     save_fn(filepath, a, *args, **kwargs)
 
 
-@converted
+@uses_opencv
 def save_image(filepath: str, a: ArrayLike) -> None:
     """Save an array of image data as an image file.
 
@@ -118,7 +133,7 @@ def save_image(filepath: str, a: ArrayLike) -> None:
             cv2.imwrite(framepath, a[i])
 
 
-@converted
+@uses_opencv
 def save_video(filepath: str,
                a: ArrayLike,
                framerate: float = 12,
@@ -149,11 +164,3 @@ def save_video(filepath: str,
     for i in range(a.shape[Z]):
         vwriter.write(a[i])
     vwriter.release()
-
-
-# Register supported types.
-SUPPORTED_TYPES = {
-    'jpg': 'image',
-    'jpeg': 'image',
-    'mp4': 'video',
-}

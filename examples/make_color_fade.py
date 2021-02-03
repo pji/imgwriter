@@ -81,7 +81,7 @@ def main(filepath: str,
     a = a.astype(np.uint8)
     
     # Send that image and the save location to imagewriter.save_video.
-    iw.save_video(filepath, a, framerate)
+    iw.save(filepath, a, framerate)
 
 
 if __name__ == '__main__':
