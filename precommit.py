@@ -17,16 +17,18 @@ import pycodestyle as pcs
 import rstcheck
 
 # Import modules with doctests
+from imgwriter import imgreader
 
 
 # Script configuration.
 doctest_modules = [
-    # Put imported modules with doctests here.
+    imgreader,
 ]
 ignore = []
 python_files = [
     '*'
     'imgwriter/*',
+    'examples/*'
     'tests/*',
 ]
 rst_files = [

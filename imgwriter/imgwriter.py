@@ -4,8 +4,11 @@ imgwriter
 
 A Python module for saving arrays as images or video.
 """
-from typing import Any
+from copy import deepcopy
+from functools import wraps
+from typing import Any, Callable
 
+import cv2
 import numpy as np
 
 
@@ -17,29 +20,147 @@ import numpy as np
 # consequences.
 ArrayLike = Any
 
+# Register supported types. This is also used to determine whether the
+# user is trying to save data as a still image or video.
+SUPPORTED_TYPES = {
+    'avi': 'video',
+    'jpg': 'image',
+    'jpeg': 'image',
+    'mp4': 'video',
+    'png': 'image',
+    'tif': 'image',
+    'tiff': 'image',
+}
+
+# Constants to replace indices with axis names for readability.
+X, Y, Z = 2, 1, 0
+
+
+# Decorators
+def uses_opencv(fn: Callable) -> Callable:
+    """Condition the image data for use by opencv prior to saving."""
+    @wraps(fn)
+    def wrapper(filepath: str, a: ArrayLike, *args, **kwargs) -> np.ndarray:
+        # Convert the image data to an array just in case we were passed
+        # something else.
+        a = np.array(deepcopy(a))
+
+        # While TIFFs can handle 32-bit floats, JPGs and PNGs can't, so
+        # rather than having TIFFs as an exception, just convert all floats
+        # to unsigned 8-bit integers.
+        if a.dtype in [float, np.float32]:
+            a = _float_to_uint8(a)
+
+        # If the data isn't a float but not a unsigned 8-bit integer,
+        # we assume it's in the right scale. So, just convert to a
+        # unsigned 8-bit integer.
+        elif a.dtype != np.uint8:
+            a = a.astype(np.uint8)
+
+        # opencv saves color data in BGR order, so RGB data needs to be
+        # flipped to BGR.
+        if len(a.shape) == 4:
+            a = np.flip(a, -1)
+
+        return fn(filepath, a, *args, **kwargs)
+    return wrapper
+
 
 # Utility functions.
-def convert_color_space(a: ArrayLike,
-                        src_space: str,
-                        dst_space: str) -> np.ndarray:
-    """Convert an array from the source color space to the destination
-    color space.
+def _float_to_uint8(a: ArrayLike) -> np.ndarray:
+    """Convert an array of floating point values to an array of
+    unsigned 8-bit integers.
+
+    :param a: The array of image data to convert to unsigned 8-bit
+        integers.
+    :return: A :class:numpy.ndarray object.
+    :rtype: numpy.ndarray
     """
     a = np.array(a)
-    channels = {
-        1: ['', 'L',],
-        3: ['RGB',]
-    }
-    bitdepth = {
-        'float': ['',],
-        '8bit': ['L', 'RGB',]
-    }
-    
-    if src_space in channels[1] and dst_space in channels[3]:
-        a = np.tile(a[..., np.newaxis], (1, 1, 1, 3))
-    
-    if src_space in bitdepth['float'] and dst_space in bitdepth['8bit']:
-        a *= 0xff
-        a = a.astype(np.uint8)
-    
-    return a
+    if np.max(a) > 1 or np.min(a) < 0:
+        msg = 'Array values must be 0 >= x >= 1.'
+        raise ValueError(msg)
+
+    a *= 0xff
+    return a.astype(np.uint8)
+
+
+def save(filepath: str, a: ArrayLike, *args, **kwargs) -> None:
+    """Save an array of image data to file.
+
+    :param filepath: The location and name of the file that will
+        be saved. The file extension will determine the format used
+        by the file.
+    :param a: The array of image data.
+    :return: None.
+    :rtype: None.
+    """
+    filetype = filepath.split('.')[-1]
+    save_as = SUPPORTED_TYPES[filetype]
+    if save_as == 'image':
+        save_fn = save_image
+    else:
+        save_fn = save_video
+    save_fn(filepath, a, *args, **kwargs)
+
+
+@uses_opencv
+def save_image(filepath: str, a: ArrayLike) -> None:
+    """Save an array of image data as an image file.
+
+    :param filepath: The location and name of the file that will
+        be saved. The file extension will determine the format used
+        by the file. The data needs to be either in an RGB or grayscale
+        color space.
+    :param a: The array of image data.
+    :return: None.
+    :rtype: None.
+    """
+    # If there is just 1 item in the Z axis, save the image data as
+    # a single image.
+    if a.shape[Z] == 1:
+        a = a[Z]
+        cv2.imwrite(filepath, a)
+
+    # If there are multiple items in the Z axis, save the image data
+    # as multiple images.
+    else:
+        parts = filepath.split('.')
+        filetype = parts[-1]
+        filename = '.'.join(parts[:-1])
+        for i in range(a.shape[Z]):
+            framepath = f'{filename}_{i}.{filetype}'
+            cv2.imwrite(framepath, a[i])
+
+
+@uses_opencv
+def save_video(filepath: str,
+               a: ArrayLike,
+               framerate: float = 12,
+               codec: str = 'mp4v') -> None:
+    """Save an array of image data as a video file.
+
+    :param filepath: The location and name of the file that will
+        be saved. The file extension will determine the container
+        type used for the file.
+    :param a: The array of image data.
+    :param framerate: (Optional.) The number of frames the video will
+        play per second.
+    :param codec: (Optional.) The codec used to encode the image data
+        into video. The exact list of supported codecs depends upon
+        the operating system. Per the opencv documentation, Linux and
+        Windows will tend to use the list supported by ffmpeg and
+        macOS will use the list suported by QTKit.
+    :return: None.
+    :rtype: None.
+    """
+    fourcc = cv2.VideoWriter_fourcc(*codec)
+    framesize = (a.shape[X], a.shape[Y])
+    iscolor = False
+    if len(a.shape) == 4:
+        iscolor = True
+
+    vwriter = cv2.VideoWriter(filepath, fourcc, framerate, framesize, iscolor)
+    for i in range(a.shape[Z]):
+        vwriter.write(a[i])
+    vwriter.release()

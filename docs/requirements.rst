@@ -49,6 +49,5 @@ The following are the technical requirements for imgwriter:
     *   JPEG
     *   TIFF
     *   PNG
-    *   GIF
 *   imgwriter must be able to save video data in the following formats:
     *   MP4
