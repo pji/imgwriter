@@ -52,7 +52,7 @@ Can I install this package from pip?
 ************************************
 Yes, but imgwriter is not currently available through PyPI. You will
 need to clone the repository to the system you want to install
-statuswriter on and run the following::
+imgwriter on and run the following::
 
     pip install path/to/local/copy
 
