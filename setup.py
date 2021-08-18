@@ -21,7 +21,7 @@ setuptools.setup(
     description=__version__.__description__,
     long_description=long_desc,
     long_description_content_type='text/x-rst',
-    url='https://github.com/pji/statuswriter',
+    url='https://github.com/pji/imgwriter',
     author=__version__.__author__,
     install_requires=reqs,
     author_email='pji@mac.com',
