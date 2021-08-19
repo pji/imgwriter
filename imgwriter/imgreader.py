@@ -4,6 +4,8 @@ imgreader
 
 A module for reading image and video files numpy arrays.
 """
+from pathlib import Path
+
 import cv2
 import numpy as np
 
@@ -36,9 +38,18 @@ def read_image(filepath: str) -> np.ndarray:
     data, it treats still images as a single frame video. As a result,
     it will add a Z axis to image data from still images.
     """
+    # Before wasting time trying to open the file, check if it
+    # even exists.
+    if not Path(filepath).is_file():
+        msg = f'There is no file at {filepath}.'
+        raise FileNotFoundError(msg)
+
     # Read in the data from the image file. Don't change whether it's
-    # color or grayscale.
+    # color or grayscale. If it wasn't readable, puke.
     a = cv2.imread(filepath, cv2.IMREAD_UNCHANGED)
+    if a is None:
+        msg = f'The file at {filepath} cannot be read.'
+        raise ValueError(msg)
 
     # If the data in the file was unsigned 8-bit integers, convert it
     # to floats in the range 0 <= x <= 1.
