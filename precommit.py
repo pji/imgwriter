@@ -13,6 +13,7 @@ import sys
 import unittest as ut
 from textwrap import wrap
 
+import mypy.api
 import pycodestyle as pcs
 import rstcheck
 
@@ -41,9 +42,12 @@ unit_tests = 'tests'
 def check_doctests(modules):
     """Run documentation tests."""
     print('Running doctests...')
-    for mod in modules:
-        doctest.testmod(mod)
-    print('Doctests complete.')
+    if not doctest_modules:
+        print('No doctests found.')
+    else:
+        for mod in modules:
+            doctest.testmod(mod)
+        print('Doctests complete.')
 
 
 def check_requirements():
@@ -121,6 +125,19 @@ def check_style(file_paths):
     run_check_on_files(title, action, file_paths, file_ext, result_handler)
 
 
+def check_type_hints(path):
+    """Check the type hinting."""
+    print('Running type hinting check...')
+    results = mypy.api.run([path, ])
+    for report in results[:-1]:
+        ps = report.split('\n')
+        for p in ps:
+            lines = wrap(p, initial_indent='  ', subsequent_indent='    ')
+            for line in lines:
+                print(line)
+    print('Type hint checks complete.')
+
+
 def check_unit_tests(path):
     """Run the unit tests."""
     print('Running unit tests...')
@@ -158,6 +175,13 @@ def check_whitespace(file_paths):
 
 
 # Utility functions.
+def get_module_dir():
+    """Get the directory of the module."""
+    cwd = os.getcwd()
+    dirs = cwd.split('/')
+    return f'{cwd}/{dirs[-1]}'
+
+
 def in_ignore(name):
     for item in ignore:
         if name.endswith(item):
@@ -211,10 +235,11 @@ def main():
 
     # Only continue with precommit checks if the unit tests passed.
     if not result.errors and not result.failures:
-        check_requirements()
+        # check_requirements()
         check_doctests(doctest_modules)
         check_style(python_files)
         check_rst(rst_files)
+        check_type_hints(get_module_dir())
 
     else:
         print('Unit tests failed. Precommit checks aborted. Do not commit.')

@@ -6,7 +6,7 @@ A module for reading image and video files numpy arrays.
 """
 from pathlib import Path
 
-import cv2
+import cv2                                            # type: ignore
 import numpy as np
 
 
