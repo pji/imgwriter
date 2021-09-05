@@ -556,7 +556,7 @@ class SaveImageTestCase(ut.TestCase):
         self.save_l('tiff')
 
 
-@ut.skip
+# @ut.skip
 class SaveVideoTestCase(ut.TestCase):
     # Utility methods.
     def assertArrayEqual(self, a, b):
