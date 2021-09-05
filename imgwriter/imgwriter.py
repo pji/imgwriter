@@ -8,7 +8,7 @@ from copy import deepcopy
 from functools import wraps
 from typing import Any, Callable
 
-import cv2
+import cv2                          # type: ignore
 import numpy as np
 
 
