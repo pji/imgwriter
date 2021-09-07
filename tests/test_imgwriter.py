@@ -36,7 +36,7 @@ class FloatToUint8TestCase(ut.TestCase):
                 [0x00, 0x7f, 0xff,],
             ],
         ], dtype=np.uint8)
-        
+
         # Test data and state.
         a = [
             [
@@ -45,10 +45,10 @@ class FloatToUint8TestCase(ut.TestCase):
                 [0., .5, 1.,],
             ],
         ]
-        
+
         # Run test.
         act = iw._float_to_uint8(a)
-        
+
         # Determine test result.
         self.assertArrayEqual(exp, act)
 
@@ -59,7 +59,7 @@ class FloatToUint8TestCase(ut.TestCase):
         # Expected result.
         exp_ex = ValueError
         exp_msg = 'Array values must be 0 >= x >= 1.'
-        
+
         exp = np.array([
             [
                 [0x00, 0x7f, 0xff,],
@@ -67,7 +67,7 @@ class FloatToUint8TestCase(ut.TestCase):
                 [0x00, 0x7f, 0xff,],
             ],
         ], dtype=np.uint8)
-        
+
         # Test data and state.
         a = [
             [
@@ -76,10 +76,10 @@ class FloatToUint8TestCase(ut.TestCase):
                 [0., .5, 1.,],
             ],
         ]
-        
+
         # Determine test result.
         with self.assertRaisesRegex(exp_ex, exp_msg):
-            
+
             # Run test.
             act = iw._float_to_uint8(a)
 
@@ -112,7 +112,7 @@ class SaveTestCase(ut.TestCase):
             ],
         ]
         exp_path = f'spam.{filetype}'
-        
+
         # Run test.
         iw.save(exp_path, exp_a)
 
@@ -124,7 +124,7 @@ class SaveTestCase(ut.TestCase):
         # Determine test result.
         self.assertEqual(exp_path, act_path)
         self.assertListEqual(exp_a, act_a)
-    
+
     @patch('imgwriter.imgwriter.save_video')
     def save_video(self, filetype, mock_sv):
         """Given a file path with a video file type, send the image
@@ -195,7 +195,7 @@ class SaveTestCase(ut.TestCase):
         ]
         exp_framerate = 12
         exp_path = f'spam.{filetype}'
-        
+
         # Run test.
         iw.save(exp_path, exp_a, exp_framerate)
 
@@ -209,7 +209,7 @@ class SaveTestCase(ut.TestCase):
         self.assertEqual(exp_path, act_path)
         self.assertListEqual(exp_a, act_a)
         self.assertEqual(exp_framerate, act_framerate)
-    
+
     # Test methods.
     def test_save_as_jpg(self):
         """Given a filepath with the filetype "jpg", save the image
@@ -294,7 +294,7 @@ class SaveImageTestCase(ut.TestCase):
         # Determine test result.
         self.assertEqual(exp_path, act_path)
         self.assertArrayEqual(exp_a, act_a)
-    
+
     @patch('cv2.imwrite')
     def save_float_rgb(self, exp_path, mock_imwrite):
         """Given image data in the 8-bit RGB color space and a file
@@ -340,7 +340,7 @@ class SaveImageTestCase(ut.TestCase):
             ],
         ], dtype=np.uint8)
         exp_a = np.flip(exp_a, -1)
-        
+
         # Run test.
         iw.save_image(exp_path, a)
 
@@ -575,7 +575,7 @@ class SaveVideoTestCase(ut.TestCase):
         filepath = f'__test_save_fpc_video.{ftype}'
         with open(f'./tests/data/{filepath}', 'rb') as fh:
             exp = fh.read()
-        
+
         # Test data and state.
         a = [
             [
@@ -631,18 +631,18 @@ class SaveVideoTestCase(ut.TestCase):
             ],
         ]
         framerate = 12
-        
+
         # Run test.
         try:
             _ = iw.save_video(filepath, a, framerate, codec)
-        
+
             # Extract actual result.
             with open(filepath, 'rb') as fh:
                 act = fh.read()
-        
+
             # Determine test result.
             self.assertEqual(exp, act)
-        
+
         # Clean up test.
         finally:
             os.remove(filepath)
@@ -655,7 +655,7 @@ class SaveVideoTestCase(ut.TestCase):
         filepath = f'__test_save_fpg_video.{ftype}'
         with open(f'./tests/data/{filepath}', 'rb') as fh:
             exp = fh.read()
-        
+
         # Test data and state.
         a = [
             [
@@ -675,18 +675,18 @@ class SaveVideoTestCase(ut.TestCase):
             ],
         ]
         framerate = 12
-        
+
         # Run test.
         try:
             _ = iw.save_video(filepath, a, framerate, codec)
-        
+
             # Extract actual result.
             with open(filepath, 'rb') as fh:
                 act = fh.read()
-        
+
             # Determine test result.
             self.assertEqual(exp, act)
-        
+
         # Clean up test.
         finally:
             os.remove(filepath)
@@ -699,7 +699,7 @@ class SaveVideoTestCase(ut.TestCase):
         filepath = f'__test_save_rgb_video.{ftype}'
         with open(f'./tests/data/{filepath}', 'rb') as fh:
             exp = fh.read()
-        
+
         # Test data and state.
         a = [
             [
@@ -764,18 +764,18 @@ class SaveVideoTestCase(ut.TestCase):
             ],
         ]
         framerate = 12
-        
+
         # Run test.
         try:
             _ = iw.save_video(filepath, a, framerate, codec)
-        
+
             # Extract actual result.
             with open(filepath, 'rb') as fh:
                 act = fh.read()
-        
+
             # Determine test result.
             self.assertEqual(exp, act)
-        
+
         # Clean up test.
         finally:
             os.remove(filepath)

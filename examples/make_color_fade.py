@@ -37,7 +37,7 @@ RESOLUTIONS = {
 
 def get_channels(color: str) -> tuple[int, int, int]:
     """Convert a 24-bit hex color string into an RGB color.
-    
+
     :param color: A 24-bit hexadecimal color string, like is commonly
         used in HTML and CSS.
     :return: A :class:tuple object.
@@ -56,7 +56,7 @@ def main(filepath: str,
          frames: int,
          framerate: float) -> None:
     """Create a video that fades from one color to another.
-    
+
     :param filepath: The location to save the spacer image.
     :param res: The resolution of the image. This is a tuple of the
         form (x, y), where "x" is the width of the image in pixels and
@@ -79,7 +79,7 @@ def main(filepath: str,
         a[:, :, :, c] *= diff_inc[c]
         a[:, :, :, c] += start_color[c]
     a = a.astype(np.uint8)
-    
+
     # Send that image and the save location to imagewriter.save_video.
     iw.save(filepath, a, framerate)
 
@@ -152,15 +152,14 @@ if __name__ == '__main__':
         kwargs = options[option]['kwargs']
         p.add_argument(*args, **kwargs)
     args = p.parse_args()
-    
+
     # Create the spacer image.
     res = RESOLUTIONS[args.resolution]
     start_color = get_channels(args.start_color)
     end_color = get_channels(args.end_color)
-    main(args.filepath, 
-         res, 
-         start_color, 
-         end_color, 
-         args.length, 
+    main(args.filepath,
+         res,
+         start_color,
+         end_color,
+         args.length,
          args.framerate)
-    

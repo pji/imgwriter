@@ -35,18 +35,18 @@ class ReadImageTestCase(ut.TestCase):
                 [0., .5, 1.,],
             ],
         ], dtype=float)
-        
+
         # Test data and state.
         filepath = f'tests/data/__test_save_grayscale_image.{filetype}'
-        
+
         # Run test.
         result = ir.read_image(filepath)
-        
+
         # Extract actual result.
         # Round the result to two decimal places to allow for the
         # issues with floating point decimals.
         act = np.around(result, 2)
-        
+
         # Determine test result.
         self.assertArrayEqual(exp, act)
 
@@ -75,18 +75,18 @@ class ReadImageTestCase(ut.TestCase):
                     ],
                 ],
             ], dtype=float)
-        
+
         # Test data and state.
         filepath = f'tests/data/__test_save_rgb_image.{filetype}'
-        
+
         # Run test.
         result = ir.read_image(filepath)
-        
+
         # Extract actual result.
         # Round the result to two decimal places to allow for the
         # issues with floating point decimals.
         act = np.around(result, 2)
-        
+
         # Determine test result.
         self.assertArrayEqual(exp, act)
 
@@ -155,26 +155,26 @@ class ReadImageTestCase(ut.TestCase):
         """
         # Test data and state.
         filepath = 'tests/data/spam.jpg'
-        
+
         # Expected value.
         exp_ex = FileNotFoundError
         exp_msg = f'There is no file at {filepath}.'
-        
+
         # Run test and determine result.
         with self.assertRaisesRegex(exp_ex, exp_msg):
             ir.read_image(filepath)
-    
+
     def test_file_not_readable(self):
         """If given the path of a file that isn't a readable image,
         raise a ValueError exception.
         """
         # Test data and state.
         filepath = 'tests/data/__test_not_image.txt'
-        
+
         # Expected value.
         exp_ex = ValueError
         exp_msg = f'The file at {filepath} cannot be read.'
-        
+
         # Run test and determine result.
         with self.assertRaisesRegex(exp_ex, exp_msg):
             ir.read_image(filepath)
