@@ -10,10 +10,13 @@ import cv2                                            # type: ignore
 import numpy as np
 
 
-def read_image(filepath: str) -> np.ndarray:
+def read_image(filepath: str, as_video: bool = True) -> np.ndarray:
     """Read image data from an image file.
 
     :param filepath: The location of the image file to read.
+    :param as_video: (Optional.) Whether the data should be read as
+        a still image or a single frame of video. The difference is
+        video has one more dimension than a still image.
     :return: A :class:numpy.ndarray object.
     :rtype: numpy.ndarray
 
@@ -62,10 +65,12 @@ def read_image(filepath: str) -> np.ndarray:
     if len(a.shape) == 3:
         a = np.flip(a, -1)
 
-    # Since this module deals with video and still images, it assumes,
-    # color images have four dimensions. Opencv reads them in with only
-    # three dimensions (two for grayscale). Add a Z axis to the data.
-    a = a[np.newaxis, ...]
+    # Since this module deals with video and still images, it allows
+    # you to read the image in as a single frame of video rather than
+    # a still image. The difference is video has an additional
+    # dimension.
+    if as_video:
+        a = a[np.newaxis, ...]
     return a
 
 

@@ -23,24 +23,28 @@ class ReadImageTestCase(ut.TestCase):
         self.assertListEqual(a_list, b_list)
 
     # Reused test code.
-    def read_grayscale(self, filetype):
+    def read_grayscale(self, filetype, as_video=True):
         """Given the path to a grayscale image file, return the image's
         data as an array.
         """
         # Expected result.
         exp = np.array([
-            [
-                [0., .5, 1.,],
-                [0., .5, 1.,],
-                [0., .5, 1.,],
-            ],
+            [0., .5, 1.,],
+            [0., .5, 1.,],
+            [0., .5, 1.,],
         ], dtype=float)
+        if as_video:
+            exp = np.expand_dims(exp, 0)
 
         # Test data and state.
-        filepath = f'tests/data/__test_save_grayscale_image.{filetype}'
+        kwargs = {
+            'filepath': f'tests/data/__test_save_grayscale_image.{filetype}',
+        }
+        if not as_video:
+            kwargs['as_video'] = False
 
         # Run test.
-        result = ir.read_image(filepath)
+        result = ir.read_image(**kwargs)
 
         # Extract actual result.
         # Round the result to two decimal places to allow for the
@@ -50,7 +54,7 @@ class ReadImageTestCase(ut.TestCase):
         # Determine test result.
         self.assertArrayEqual(exp, act)
 
-    def read_rgb(self, filetype, exp=None):
+    def read_rgb(self, filetype, exp=None, as_video=True):
         """Given the path to a RGB image file, return the image's
         data as an array.
         """
@@ -58,29 +62,33 @@ class ReadImageTestCase(ut.TestCase):
         if exp is None:
             exp = np.array([
                 [
-                    [
-                        [1., .5, 0.,],
-                        [1., .5, 0.,],
-                        [1., .5, 0.,],
-                    ],
-                    [
-                        [.5, 0., 1.,],
-                        [.5, 0., 1.,],
-                        [.5, 0., 1.,],
-                    ],
-                    [
-                        [0., 1., .5,],
-                        [0., 1., .5,],
-                        [0., 1., .5,],
-                    ],
+                    [1., .5, 0.,],
+                    [1., .5, 0.,],
+                    [1., .5, 0.,],
+                ],
+                [
+                    [.5, 0., 1.,],
+                    [.5, 0., 1.,],
+                    [.5, 0., 1.,],
+                ],
+                [
+                    [0., 1., .5,],
+                    [0., 1., .5,],
+                    [0., 1., .5,],
                 ],
             ], dtype=float)
+            if as_video:
+                exp = np.expand_dims(exp, 0)
 
         # Test data and state.
-        filepath = f'tests/data/__test_save_rgb_image.{filetype}'
+        kwargs = {
+            'filepath': f'tests/data/__test_save_rgb_image.{filetype}',
+        }
+        if not as_video:
+            kwargs['as_video'] = False
 
         # Run test.
-        result = ir.read_image(filepath)
+        result = ir.read_image(**kwargs)
 
         # Extract actual result.
         # Round the result to two decimal places to allow for the
@@ -178,3 +186,37 @@ class ReadImageTestCase(ut.TestCase):
         # Run test and determine result.
         with self.assertRaisesRegex(exp_ex, exp_msg):
             ir.read_image(filepath)
+
+    def test_read_grayscale_jpg_as_still(self):
+        """Given the path to a grayscale JPG file, return the image's
+        data as an array. The resulting array should have two
+        dimensions.
+        """
+        self.read_grayscale('jpg', as_video=False)
+
+    def test_read_rgb_jpg_as_still(self):
+        """Given the path to a RGB JPG file, return the image's
+        data as an array. The resulting array should have two
+        dimensions.
+        """
+        # Adjust the expected result to account for how JPEG
+        # compression changed the color when we created the test
+        # file.
+        exp = np.array([
+            [
+                [.92, .41, .66,],
+                [.92, .41, .66,],
+                [.92, .41, .66,],
+            ],
+            [
+                [.59, .08, .33,],
+                [.59, .08, .33,],
+                [.59, .08, .33,],
+            ],
+            [
+                [0., 1., .51,],
+                [0., 1., .51,],
+                [0., 1., .51,],
+            ],
+        ], dtype=float)
+        self.read_rgb('jpg', exp, as_video=False)
