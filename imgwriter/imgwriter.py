@@ -61,6 +61,10 @@ def uses_opencv(fn: Callable) -> Callable:
         # flipped to BGR.
         if len(a.shape) == 4:
             a = np.flip(a, -1)
+        elif (len(a.shape) == 3
+                and 'as_series' in kwargs
+                and not kwargs['as_series']):
+            a = np.flip(a, -1)
 
         return fn(filepath, a, *args, **kwargs)
     return wrapper

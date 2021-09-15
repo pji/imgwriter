@@ -396,6 +396,7 @@ class SaveImageTestCase(ut.TestCase):
                 [0x00, 0xff, 0x7f,],
             ],
         ], dtype=np.uint8)
+        exp_a = np.flip(exp_a, -1)
 
         # Run test.
         iw.save_image(exp_path, a, as_series=False)
