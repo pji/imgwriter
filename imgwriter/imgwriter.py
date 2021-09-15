@@ -105,7 +105,9 @@ def save(filepath: str, a: ArrayLike, *args, **kwargs) -> None:
 
 
 @uses_opencv
-def save_image(filepath: str, a: ArrayLike) -> None:
+def save_image(filepath: str,
+               a: ArrayLike,
+               as_series: bool = True) -> None:
     """Save an array of image data as an image file.
 
     :param filepath: The location and name of the file that will
@@ -116,9 +118,13 @@ def save_image(filepath: str, a: ArrayLike) -> None:
     :return: None.
     :rtype: None.
     """
+    # If the array isn't a series of images, just save what is given.
+    if not as_series:
+        cv2.imwrite(filepath, a)
+
     # If there is just 1 item in the Z axis, save the image data as
     # a single image.
-    if a.shape[Z] == 1:
+    elif a.shape[Z] == 1:
         a = a[Z]
         cv2.imwrite(filepath, a)
 

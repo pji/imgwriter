@@ -355,6 +355,62 @@ class SaveImageTestCase(ut.TestCase):
         self.assertArrayEqual(exp_a, act_a)
 
     @patch('cv2.imwrite')
+    def save_float_rgb_as_single(self, exp_path, mock_imwrite):
+        """Given image data in the 8-bit RGB color space and a file
+        path, save the image data to the given file path.
+        """
+        # Test data and state.
+        a = [
+            [
+                [1., .5, 0.,],
+                [1., .5, 0.,],
+                [1., .5, 0.,],
+            ],
+            [
+                [.5, 0., 1.,],
+                [.5, 0., 1.,],
+                [.5, 0., 1.,],
+            ],
+            [
+                [0., 1., .5,],
+                [0., 1., .5,],
+                [0., 1., .5,],
+            ],
+        ]
+
+        # Expected value.
+        exp_a = np.array([
+            [
+                [0xff, 0x7f, 0x00,],
+                [0xff, 0x7f, 0x00,],
+                [0xff, 0x7f, 0x00,],
+            ],
+            [
+                [0x7f, 0x00, 0xff,],
+                [0x7f, 0x00, 0xff,],
+                [0x7f, 0x00, 0xff,],
+            ],
+            [
+                [0x00, 0xff, 0x7f,],
+                [0x00, 0xff, 0x7f,],
+                [0x00, 0xff, 0x7f,],
+            ],
+        ], dtype=np.uint8)
+
+        # Run test.
+        iw.save_image(exp_path, a, as_series=False)
+
+        # Extract actual result.
+        mock_imwrite.call_args
+        args = mock_imwrite.call_args.args
+        act_path = args[0]
+        act_a = args[1]
+
+        # Determine test result.
+        self.assertEqual(exp_path, act_path)
+        self.assertArrayEqual(exp_a, act_a)
+
+    @patch('cv2.imwrite')
     def save_fpg(self, exp_path, mock_imwrite):
         """Given image data in the floating point grayscale color
         space and a file path, save the image data to the file path.
@@ -482,6 +538,14 @@ class SaveImageTestCase(ut.TestCase):
         path, save the image data to the file path as a JPG file.
         """
         self.save_float_rgb('spam.jpg')
+
+    def test_save_float_rgb_as_jpg_as_single(self):
+        """Given image data in the 8-bit RGB color space and a file
+        path, save the image data to the file path as a JPG file.
+        If the image is not a series, a three dimensional array
+        should be saved as a single image.
+        """
+        self.save_float_rgb_as_single('spam.jpg')
 
     def test_save_float_rgb_as_png(self):
         """Given image data in the 8-bit RGB color space and a file
