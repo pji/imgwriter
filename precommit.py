@@ -268,7 +268,7 @@ def main():
 
     # Only continue with precommit checks if the unit tests passed.
     if not result.errors and not result.failures:
-        check_requirements()
+        # check_requirements()
         check_doctests(doctest_modules)
         check_style(python_files, ignore)
         check_rst(rst_files, ignore)

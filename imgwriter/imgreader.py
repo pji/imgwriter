@@ -5,12 +5,16 @@ imgreader
 A module for reading image and video files numpy arrays.
 """
 from pathlib import Path
+from typing import Union
 
 import cv2                                            # type: ignore
 import numpy as np
 
 
-def read_image(filepath: str, as_video: bool = True) -> np.ndarray:
+def read_image(
+    filepath: Union[str, Path],
+    as_video: bool = True
+) -> np.ndarray:
     """Read image data from an image file.
 
     :param filepath: The location of the image file to read.
@@ -41,6 +45,9 @@ def read_image(filepath: str, as_video: bool = True) -> np.ndarray:
     data, it treats still images as a single frame video. As a result,
     it will add a Z axis to image data from still images.
     """
+    # Ensure filepath is a string in case opencv doesn't like Path.
+    filepath = str(filepath)
+
     # Before wasting time trying to open the file, check if it
     # even exists.
     if not Path(filepath).is_file():
