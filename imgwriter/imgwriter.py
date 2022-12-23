@@ -6,7 +6,8 @@ A Python module for saving arrays as images or video.
 """
 from copy import deepcopy
 from functools import wraps
-from typing import Any, Callable
+from pathlib import Path
+from typing import Any, Callable, Union
 
 import cv2                          # type: ignore
 import numpy as np
@@ -89,7 +90,7 @@ def _float_to_uint8(a: ArrayLike) -> np.ndarray:
     return a.astype(np.uint8)
 
 
-def save(filepath: str, a: ArrayLike, *args, **kwargs) -> None:
+def save(filepath: Union[str, Path], a: ArrayLike, *args, **kwargs) -> None:
     """Save an array of image data to file.
 
     :param filepath: The location and name of the file that will
@@ -99,7 +100,8 @@ def save(filepath: str, a: ArrayLike, *args, **kwargs) -> None:
     :return: None.
     :rtype: None.
     """
-    filetype = filepath.split('.')[-1]
+    filepath = Path(filepath)
+    filetype = filepath.suffix[1:]
     save_as = SUPPORTED_TYPES[filetype]
     if save_as == 'image':
         save_fn = save_image
@@ -109,9 +111,11 @@ def save(filepath: str, a: ArrayLike, *args, **kwargs) -> None:
 
 
 @uses_opencv
-def save_image(filepath: str,
-               a: ArrayLike,
-               as_series: bool = True) -> None:
+def save_image(
+    filepath: Union[str, Path],
+    a: ArrayLike,
+    as_series: bool = True
+) -> None:
     """Save an array of image data as an image file.
 
     :param filepath: The location and name of the file that will
@@ -119,35 +123,41 @@ def save_image(filepath: str,
         by the file. The data needs to be either in an RGB or grayscale
         color space.
     :param a: The array of image data.
+    :param as_series: (Optional.) Whether the array is intended to be a
+        series of images.
     :return: None.
     :rtype: None.
     """
+    filepath = Path(filepath)
+
     # If the array isn't a series of images, just save what is given.
     if not as_series:
-        cv2.imwrite(filepath, a)
+        cv2.imwrite(str(filepath), a)
 
     # If there is just 1 item in the Z axis, save the image data as
     # a single image.
     elif a.shape[Z] == 1:
         a = a[Z]
-        cv2.imwrite(filepath, a)
+        cv2.imwrite(str(filepath), a)
 
     # If there are multiple items in the Z axis, save the image data
     # as multiple images.
     else:
-        parts = filepath.split('.')
-        filetype = parts[-1]
-        filename = '.'.join(parts[:-1])
+        fileparent = filepath.parent
+        filename = filepath.stem
+        filetype = filepath.suffix
         for i in range(a.shape[Z]):
-            framepath = f'{filename}_{i}.{filetype}'
+            framepath = str(fileparent / f'{filename}_{i}{filetype}')
             cv2.imwrite(framepath, a[i])
 
 
 @uses_opencv
-def save_video(filepath: str,
-               a: ArrayLike,
-               framerate: float = 12,
-               codec: str = 'mp4v') -> None:
+def save_video(
+    filepath: Union[str, Path],
+    a: ArrayLike,
+    framerate: float = 12.0,
+    codec: str = 'mp4v'
+) -> None:
     """Save an array of image data as a video file.
 
     :param filepath: The location and name of the file that will
@@ -164,6 +174,9 @@ def save_video(filepath: str,
     :return: None.
     :rtype: None.
     """
+    # cv2.VideoWriter requires a string rather than a Path.
+    filepath = str(filepath)
+
     fourcc = cv2.VideoWriter_fourcc(*codec)
     framesize = (a.shape[X], a.shape[Y])
     iscolor = False

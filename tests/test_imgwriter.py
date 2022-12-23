@@ -4,6 +4,7 @@ test_imgwriter
 
 Unit tests for the imgwriter.imgwriter module.
 """
+from pathlib import Path
 import os
 import unittest as ut
 from unittest.mock import call, MagicMock, patch
@@ -111,7 +112,7 @@ class SaveTestCase(ut.TestCase):
                 ],
             ],
         ]
-        exp_path = f'spam.{filetype}'
+        exp_path = Path(f'spam.{filetype}')
 
         # Run test.
         iw.save(exp_path, exp_a)
@@ -194,7 +195,7 @@ class SaveTestCase(ut.TestCase):
             ],
         ]
         exp_framerate = 12
-        exp_path = f'spam.{filetype}'
+        exp_path = Path(f'spam.{filetype}')
 
         # Run test.
         iw.save(exp_path, exp_a, exp_framerate)
