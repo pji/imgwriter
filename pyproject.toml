@@ -2,6 +2,14 @@
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
+[tool.rstcheck]
+report_level = "WARNING"
+ignore_directives = ["autoclass", "autofunction"]
+
+[tool.pytest.ini_options]
+addopts = ["--import-mode=importlib",]
+markers = ['codec', 'ext',]
+
 [project]
 name = "imgwriter"
 version = "0.2.2"
