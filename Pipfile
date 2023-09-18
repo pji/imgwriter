@@ -6,7 +6,6 @@ name = "pypi"
 [packages]
 numpy = "*"
 opencv-python = "*"
-pytest = "*"
 
 [dev-packages]
 pycodestyle = "*"
@@ -14,6 +13,7 @@ mypy = "*"
 rstcheck = "*"
 build = "*"
 pytest-mock = "*"
+pytest = "*"
 
 [requires]
 python_version = "3.9"
