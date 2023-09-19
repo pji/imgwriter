@@ -9,17 +9,10 @@ from functools import wraps
 from pathlib import Path
 from typing import Any, Callable, Union
 
-import cv2                          # type: ignore
+import cv2
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 
-
-# The ArrayLike type is intended to match numpy's array-like
-# descriptive type, which is anything that numpy.array can turn
-# into a numpy.ndarray object. That is, ultimately, anything, but
-# use of ArrayLike in the type hints is intended to communicate
-# the data will be converted to an ndarray, which may have
-# consequences.
-ArrayLike = Any
 
 # Register supported types. This is also used to determine whether the
 # user is trying to save data as a still image or video.
@@ -37,11 +30,24 @@ SUPPORTED_TYPES = {
 X, Y, Z = 2, 1, 0
 
 
+# Types.
+Saver = Union[
+    Callable[[Union[str, Path], NDArray[np.uint8], bool], None],
+    Callable[[Union[str, Path], NDArray[np.uint8], float, str], None]
+]
+WrappedSaver = Union[
+    Callable[[Union[str, Path], ArrayLike, bool], None],
+    Callable[[Union[str, Path], ArrayLike, float, str], None]
+]
+
+
 # Decorators
-def uses_opencv(fn: Callable) -> Callable:
+def uses_opencv(fn: Saver) -> WrappedSaver:
     """Condition the image data for use by opencv prior to saving."""
     @wraps(fn)
-    def wrapper(filepath: str, a: ArrayLike, *args, **kwargs) -> np.ndarray:
+    def wrapper(
+        filepath: Union[str, Path], a: ArrayLike, *args, **kwargs
+    ) -> None:
         # Convert the image data to an array just in case we were passed
         # something else.
         a = np.array(deepcopy(a))
@@ -72,7 +78,7 @@ def uses_opencv(fn: Callable) -> Callable:
 
 
 # Utility functions.
-def _float_to_uint8(a: ArrayLike) -> np.ndarray:
+def _float_to_uint8(a: ArrayLike) -> NDArray[np.uint8]:
     """Convert an array of floating point values to an array of
     unsigned 8-bit integers.
 
@@ -113,7 +119,7 @@ def save(filepath: Union[str, Path], a: ArrayLike, *args, **kwargs) -> None:
 @uses_opencv
 def save_image(
     filepath: Union[str, Path],
-    a: ArrayLike,
+    a: NDArray[np.uint8],
     as_series: bool = True
 ) -> None:
     """Save an array of image data as an image file.
@@ -154,7 +160,7 @@ def save_image(
 @uses_opencv
 def save_video(
     filepath: Union[str, Path],
-    a: ArrayLike,
+    a: NDArray[np.uint8],
     framerate: float = 12.0,
     codec: str = 'mp4v'
 ) -> None:

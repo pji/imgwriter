@@ -4,11 +4,6 @@ test_imgwriter
 
 Unit tests for the imgwriter.imgwriter module.
 """
-from pathlib import Path
-import os
-import unittest as ut
-from unittest.mock import call, MagicMock, patch
-
 import cv2
 import numpy as np
 import pytest as pt
@@ -721,6 +716,98 @@ def fpc_video(request, mocker):
     return mock_vw.mock_calls
 
 
+@pt.fixture
+def fpg_video(request, mocker):
+    """Test for saving floating point color video."""
+    ext = request.node.get_closest_marker('ext').args[0]
+    codec = request.node.get_closest_marker('codec').args[0]
+    mock_vw = mocker.patch('cv2.VideoWriter')
+    a = np.array([
+        [
+            [0., .5, 1.,],
+            [0., .5, 1.,],
+            [0., .5, 1.,],
+        ],
+        [
+            [1., 0., .5,],
+            [1., 0., .5,],
+            [1., 0., .5,],
+        ],
+        [
+            [.5, 1., 0.,],
+            [.5, 1., 0.,],
+            [.5, 1., 0.,],
+        ],
+    ])
+    path = f'spam.{ext}'
+    iw.save_video(path, a, 12, codec)
+    return mock_vw.mock_calls
+
+
+@pt.fixture
+def rgb_video(request, mocker):
+    """Test for saving uint8 color video."""
+    ext = request.node.get_closest_marker('ext').args[0]
+    codec = request.node.get_closest_marker('codec').args[0]
+    mock_vw = mocker.patch('cv2.VideoWriter')
+    a = np.array([
+        [
+            [
+                [0x00, 0x7f, 0xff],
+                [0x00, 0x7f, 0xff],
+                [0x00, 0x7f, 0xff],
+            ],
+            [
+                [0x7f, 0xff, 0x00],
+                [0x7f, 0xff, 0x00],
+                [0x7f, 0xff, 0x00],
+            ],
+            [
+                [0xff, 0x00, 0x7f,],
+                [0xff, 0x00, 0x7f,],
+                [0xff, 0x00, 0x7f,],
+            ],
+        ],
+        [
+            [
+                [0xff, 0x00, 0x7f,],
+                [0xff, 0x00, 0x7f,],
+                [0xff, 0x00, 0x7f,],
+            ],
+            [
+                [0x00, 0x7f, 0xff],
+                [0x00, 0x7f, 0xff],
+                [0x00, 0x7f, 0xff],
+            ],
+            [
+                [0x7f, 0xff, 0x00],
+                [0x7f, 0xff, 0x00],
+                [0x7f, 0xff, 0x00],
+            ],
+        ],
+        [
+            [
+                [0x7f, 0xff, 0x00],
+                [0x7f, 0xff, 0x00],
+                [0x7f, 0xff, 0x00],
+            ],
+            [
+                [0xff, 0x00, 0x7f,],
+                [0xff, 0x00, 0x7f,],
+                [0xff, 0x00, 0x7f,],
+            ],
+            [
+                [0x00, 0x7f, 0xff],
+                [0x00, 0x7f, 0xff],
+                [0x00, 0x7f, 0xff],
+            ],
+        ],
+    ])
+    path = f'spam.{ext}'
+    iw.save_video(path, a, 12, codec)
+    return mock_vw.mock_calls
+
+
 # Tests for save_video.
 @pt.mark.codec('mp4v')
 @pt.mark.ext('avi')
@@ -852,251 +939,189 @@ def test_save_video_fpc_as_mp4(fpc_video, mocker):
     assert actual[4] == mocker.call().release()
 
 
-@ut.skip
-class SaveVideoTestCase(ut.TestCase):
-    # Utility methods.
-    def assertArrayEqual(self, a, b):
-        """Given two numpy.ndarray objects, raise an AssertionError if
-        they are not equal.
-        """
-        a_list = a.tolist()
-        b_list = b.tolist()
-        self.assertListEqual(a_list, b_list)
+@pt.mark.codec('mp4v')
+@pt.mark.ext('avi')
+def test_save_video_fpg_as_avi(fpg_video, mocker):
+    """Given image data in the floating point grayscale space,
+    :func:`save_video` should save the data as an AVI video
+    file.
+    """
+    actual = fpg_video
+    assert actual[0] == mocker.call(
+        'spam.avi', cv2.VideoWriter_fourcc(*'mp4v'), 12, (3, 3), False
+    )
+    assert (actual[1][1][0] == np.array([
+        [0x00, 0x7f, 0xff],
+        [0x00, 0x7f, 0xff],
+        [0x00, 0x7f, 0xff],
+    ])).all()
+    assert (actual[2][1][0] == np.array([
+        [0xff, 0x00, 0x7f],
+        [0xff, 0x00, 0x7f],
+        [0xff, 0x00, 0x7f],
+    ])).all()
+    assert (actual[3][1][0] == np.array([
+        [0x7f, 0xff, 0x00],
+        [0x7f, 0xff, 0x00],
+        [0x7f, 0xff, 0x00],
+    ])).all()
+    assert actual[4] == mocker.call().release()
 
-    def save_fpc_video(self, ftype, codec='mp4v'):
-        """Given image data in the floating point grayscale color
-        space, save the data as a video file.
-        """
-        # Expected result.
-        filepath = f'__test_save_fpc_video.{ftype}'
-        with open(f'./tests/data/{filepath}', 'rb') as fh:
-            exp = fh.read()
 
-        # Test data and state.
-        a = [
-            [
-                [
-                    [1., .5, 0.,],
-                    [1., .5, 0.,],
-                    [1., .5, 0.,],
-                ],
-                [
-                    [.5, 0., 1.,],
-                    [.5, 0., 1.,],
-                    [.5, 0., 1.,],
-                ],
-                [
-                    [0., 1., .5,],
-                    [0., 1., .5,],
-                    [0., 1., .5,],
-                ],
-            ],
-            [
-                [
-                    [0., 1., .5,],
-                    [0., 1., .5,],
-                    [0., 1., .5,],
-                ],
-                [
-                    [1., .5, 0.,],
-                    [1., .5, 0.,],
-                    [1., .5, 0.,],
-                ],
-                [
-                    [.5, 0., 1.,],
-                    [.5, 0., 1.,],
-                    [.5, 0., 1.,],
-                ],
-            ],
-            [
-                [
-                    [.5, 0., 1.,],
-                    [.5, 0., 1.,],
-                    [.5, 0., 1.,],
-                ],
-                [
-                    [0., 1., .5,],
-                    [0., 1., .5,],
-                    [0., 1., .5,],
-                ],
-                [
-                    [1., .5, 0.,],
-                    [1., .5, 0.,],
-                    [1., .5, 0.,],
-                ],
-            ],
-        ]
-        framerate = 12
+@pt.mark.codec('mp4v')
+@pt.mark.ext('mp4')
+def test_save_video_fpg_as_avi(fpg_video, mocker):
+    """Given image data in the floating point grayscale space,
+    :func:`save_video` should save the data as an MP4 video
+    file.
+    """
+    actual = fpg_video
+    assert actual[0] == mocker.call(
+        'spam.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 12, (3, 3), False
+    )
+    assert (actual[1][1][0] == np.array([
+        [0x00, 0x7f, 0xff],
+        [0x00, 0x7f, 0xff],
+        [0x00, 0x7f, 0xff],
+    ])).all()
+    assert (actual[2][1][0] == np.array([
+        [0xff, 0x00, 0x7f],
+        [0xff, 0x00, 0x7f],
+        [0xff, 0x00, 0x7f],
+    ])).all()
+    assert (actual[3][1][0] == np.array([
+        [0x7f, 0xff, 0x00],
+        [0x7f, 0xff, 0x00],
+        [0x7f, 0xff, 0x00],
+    ])).all()
+    assert actual[4] == mocker.call().release()
 
-        # Run test.
-        try:
-            _ = iw.save_video(filepath, a, framerate, codec)
 
-            # Extract actual result.
-            with open(filepath, 'rb') as fh:
-                act = fh.read()
+@pt.mark.codec('mp4v')
+@pt.mark.ext('avi')
+def test_save_video_rgb_as_avi(rgb_video, mocker):
+    """Given image data in the uint8 color space,
+    :func:`save_video` should save the data as an
+    AVI video file.
+    """
+    actual = rgb_video
+    assert actual[0] == mocker.call(
+        'spam.avi', cv2.VideoWriter_fourcc(*'mp4v'), 12, (3, 3), True
+    )
+    assert (actual[1][1][0] == np.array([
+        [
+            [0xff, 0x7f, 0x00],
+            [0xff, 0x7f, 0x00],
+            [0xff, 0x7f, 0x00],
+        ],
+        [
+            [0x00, 0xff, 0x7f],
+            [0x00, 0xff, 0x7f],
+            [0x00, 0xff, 0x7f],
+        ],
+        [
+            [0x7f, 0x00, 0xff],
+            [0x7f, 0x00, 0xff],
+            [0x7f, 0x00, 0xff],
+        ],
+    ])).all()
+    assert (actual[2][1][0] == np.array([
+        [
+            [0x7f, 0x00, 0xff],
+            [0x7f, 0x00, 0xff],
+            [0x7f, 0x00, 0xff],
+        ],
+        [
+            [0xff, 0x7f, 0x00],
+            [0xff, 0x7f, 0x00],
+            [0xff, 0x7f, 0x00],
+        ],
+        [
+            [0x00, 0xff, 0x7f],
+            [0x00, 0xff, 0x7f],
+            [0x00, 0xff, 0x7f],
+        ],
+    ])).all()
+    assert (actual[3][1][0] == np.array([
+        [
+            [0x00, 0xff, 0x7f],
+            [0x00, 0xff, 0x7f],
+            [0x00, 0xff, 0x7f],
+        ],
+        [
+            [0x7f, 0x00, 0xff],
+            [0x7f, 0x00, 0xff],
+            [0x7f, 0x00, 0xff],
+        ],
+        [
+            [0xff, 0x7f, 0x00],
+            [0xff, 0x7f, 0x00],
+            [0xff, 0x7f, 0x00],
+        ],
+    ])).all()
+    assert actual[4] == mocker.call().release()
 
-            # Determine test result.
-            self.assertEqual(exp, act)
 
-        # Clean up test.
-        finally:
-            os.remove(filepath)
-
-    def save_fpg_video(self, ftype, codec='mp4v'):
-        """Given image data in the floating point grayscale color
-        space, save the data aa a video file.
-        """
-        # Expected result.
-        filepath = f'__test_save_fpg_video.{ftype}'
-        with open(f'./tests/data/{filepath}', 'rb') as fh:
-            exp = fh.read()
-
-        # Test data and state.
-        a = [
-            [
-                [0., .5, 1.,],
-                [0., .5, 1.,],
-                [0., .5, 1.,],
-            ],
-            [
-                [1., 0., .5,],
-                [1., 0., .5,],
-                [1., 0., .5,],
-            ],
-            [
-                [.5, 1., 0.,],
-                [.5, 1., 0.,],
-                [.5, 1., 0.,],
-            ],
-        ]
-        framerate = 12
-
-        # Run test.
-        try:
-            _ = iw.save_video(filepath, a, framerate, codec)
-
-            # Extract actual result.
-            with open(filepath, 'rb') as fh:
-                act = fh.read()
-
-            # Determine test result.
-            self.assertEqual(exp, act)
-
-        # Clean up test.
-        finally:
-            os.remove(filepath)
-
-    def save_rgb_video(self, ftype, codec='mp4v'):
-        """Given image data in the RGB color space, save the data
-        as a video file.
-        """
-        # Expected result.
-        filepath = f'__test_save_rgb_video.{ftype}'
-        with open(f'./tests/data/{filepath}', 'rb') as fh:
-            exp = fh.read()
-
-        # Test data and state.
-        a = [
-            [
-                [
-                    [0x00, 0x7f, 0xff],
-                    [0x00, 0x7f, 0xff],
-                    [0x00, 0x7f, 0xff],
-                    [0x00, 0x7f, 0xff],
-                ],
-                [
-                    [0x7f, 0xff, 0x00],
-                    [0x7f, 0xff, 0x00],
-                    [0x7f, 0xff, 0x00],
-                    [0x7f, 0xff, 0x00],
-                ],
-                [
-                    [0xff, 0x00, 0x7f,],
-                    [0xff, 0x00, 0x7f,],
-                    [0xff, 0x00, 0x7f,],
-                    [0xff, 0x00, 0x7f,],
-                ],
-            ],
-            [
-                [
-                    [0xff, 0x00, 0x7f,],
-                    [0xff, 0x00, 0x7f,],
-                    [0xff, 0x00, 0x7f,],
-                    [0xff, 0x00, 0x7f,],
-                ],
-                [
-                    [0x00, 0x7f, 0xff],
-                    [0x00, 0x7f, 0xff],
-                    [0x00, 0x7f, 0xff],
-                    [0x00, 0x7f, 0xff],
-                ],
-                [
-                    [0x7f, 0xff, 0x00],
-                    [0x7f, 0xff, 0x00],
-                    [0x7f, 0xff, 0x00],
-                    [0x7f, 0xff, 0x00],
-                ],
-            ],
-            [
-                [
-                    [0x7f, 0xff, 0x00],
-                    [0x7f, 0xff, 0x00],
-                    [0x7f, 0xff, 0x00],
-                    [0x7f, 0xff, 0x00],
-                ],
-                [
-                    [0xff, 0x00, 0x7f,],
-                    [0xff, 0x00, 0x7f,],
-                    [0xff, 0x00, 0x7f,],
-                    [0xff, 0x00, 0x7f,],
-                ],
-                [
-                    [0x00, 0x7f, 0xff],
-                    [0x00, 0x7f, 0xff],
-                    [0x00, 0x7f, 0xff],
-                    [0x00, 0x7f, 0xff],
-                ],
-            ],
-        ]
-        framerate = 12
-
-        # Run test.
-        try:
-            _ = iw.save_video(filepath, a, framerate, codec)
-
-            # Extract actual result.
-            with open(filepath, 'rb') as fh:
-                act = fh.read()
-
-            # Determine test result.
-            self.assertEqual(exp, act)
-
-        # Clean up test.
-        finally:
-            os.remove(filepath)
-
-    # Test methods.
-    def test_save_fpg_video_as_avi(self):
-        """Given image data in the floating point grayscale color
-        space, save the data as an AVI video file.
-        """
-        self.save_fpg_video('avi', 'MJPG')
-
-    def test_save_fpg_video_as_mp4(self):
-        """Given image data in the floating point grayscale color
-        space, save the data as an MP4 video file.
-        """
-        self.save_fpg_video('mp4')
-
-    def test_save_rgb_video_as_avi(self):
-        """Given image data in the RGB color space, save the data
-        as an AVI video file.
-        """
-        self.save_rgb_video('avi', 'MJPG')
-
-    def test_save_rgb_video_as_mp4(self):
-        """Given image data in the RGB color space, save the data
-        as an MP4 video file.
-        """
-        self.save_rgb_video('mp4')
+@pt.mark.codec('mp4v')
+@pt.mark.ext('mp4')
+def test_save_video_rgb_as_avi(rgb_video, mocker):
+    """Given image data in the uint8 color space,
+    :func:`save_video` should save the data as an
+    MP4 video file.
+    """
+    actual = rgb_video
+    assert actual[0] == mocker.call(
+        'spam.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 12, (3, 3), True
+    )
+    assert (actual[1][1][0] == np.array([
+        [
+            [0xff, 0x7f, 0x00],
+            [0xff, 0x7f, 0x00],
+            [0xff, 0x7f, 0x00],
+        ],
+        [
+            [0x00, 0xff, 0x7f],
+            [0x00, 0xff, 0x7f],
+            [0x00, 0xff, 0x7f],
+        ],
+        [
+            [0x7f, 0x00, 0xff],
+            [0x7f, 0x00, 0xff],
+            [0x7f, 0x00, 0xff],
+        ],
+    ])).all()
+    assert (actual[2][1][0] == np.array([
+        [
+            [0x7f, 0x00, 0xff],
+            [0x7f, 0x00, 0xff],
+            [0x7f, 0x00, 0xff],
+        ],
+        [
+            [0xff, 0x7f, 0x00],
+            [0xff, 0x7f, 0x00],
+            [0xff, 0x7f, 0x00],
+        ],
+        [
+            [0x00, 0xff, 0x7f],
+            [0x00, 0xff, 0x7f],
+            [0x00, 0xff, 0x7f],
+        ],
+    ])).all()
+    assert (actual[3][1][0] == np.array([
+        [
+            [0x00, 0xff, 0x7f],
+            [0x00, 0xff, 0x7f],
+            [0x00, 0xff, 0x7f],
+        ],
+        [
+            [0x7f, 0x00, 0xff],
+            [0x7f, 0x00, 0xff],
+            [0x7f, 0x00, 0xff],
+        ],
+        [
+            [0xff, 0x7f, 0x00],
+            [0xff, 0x7f, 0x00],
+            [0xff, 0x7f, 0x00],
+        ],
+    ])).all()
+    assert actual[4] == mocker.call().release()
