@@ -8,7 +8,7 @@ ignore_directives = ["autoclass", "autofunction"]
 
 [tool.pytest.ini_options]
 addopts = ["--import-mode=importlib",]
-markers = ['codec', 'ext',]
+markers = ['codec', 'ext', 'path',]
 
 [project]
 name = "imgwriter"

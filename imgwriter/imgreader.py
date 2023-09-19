@@ -7,14 +7,15 @@ A module for reading image and video files numpy arrays.
 from pathlib import Path
 from typing import Union
 
-import cv2                                            # type: ignore
+import cv2
 import numpy as np
+from numpy.typing import NDArray
 
 
 def read_image(
     filepath: Union[str, Path],
     as_video: bool = True
-) -> np.ndarray:
+) -> NDArray[np.float_]:
     """Read image data from an image file.
 
     :param filepath: The location of the image file to read.
@@ -81,7 +82,7 @@ def read_image(
     return a
 
 
-def read_video(filepath: str) -> np.ndarray:
+def read_video(filepath: str) -> NDArray[np.float_]:
     """Capture image data from a video file. Due to the nature of
     video encoding, this doesn't reverse an imgwriter.save(). It
     should be considered experimental for now.

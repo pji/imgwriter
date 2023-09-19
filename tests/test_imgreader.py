@@ -4,205 +4,87 @@ test_imgreader
 
 Unit tests for the imgwriter.imgreader module.
 """
-import unittest as ut
-
 import numpy as np
+import pytest as pt
 
 from imgwriter import imgreader as ir
 
 
-# Test cases.
-class ReadImageTestCase(ut.TestCase):
-    # Utility methods.
-    def assertArrayEqual(self, a, b):
-        """Given two numpy.ndarray objects, raise an AssertionError if
-        they are not equal.
-        """
-        a_list = a.tolist()
-        b_list = b.tolist()
-        self.assertListEqual(a_list, b_list)
+# Fixtures.
+@pt.fixture
+def image(request):
+    """A common test for :func:`read_image`."""
+    path = request.node.get_closest_marker('path').args[0]
+    path = f'tests/data/{path}'
+    a = ir.read_image(path)
+    return np.around(a, 2)
 
-    # Reused test code.
-    def read_grayscale(self, filetype, as_video=True):
-        """Given the path to a grayscale image file, return the image's
-        data as an array.
-        """
-        # Expected result.
-        exp = np.array([
-            [0., .5, 1.,],
-            [0., .5, 1.,],
-            [0., .5, 1.,],
-        ], dtype=float)
-        if as_video:
-            exp = np.expand_dims(exp, 0)
 
-        # Test data and state.
-        kwargs = {
-            'filepath': f'tests/data/__test_save_grayscale_image.{filetype}',
-        }
-        if not as_video:
-            kwargs['as_video'] = False
+@pt.fixture
+def image_as_vid(request):
+    """A common test for :func:`read_image` with `as_video`."""
+    path = request.node.get_closest_marker('path').args[0]
+    path = f'tests/data/{path}'
+    a = ir.read_image(path, as_video=True)
+    return np.around(a, 2)
 
-        # Run test.
-        result = ir.read_image(**kwargs)
 
-        # Extract actual result.
-        # Round the result to two decimal places to allow for the
-        # issues with floating point decimals.
-        act = np.around(result, 2)
+# Tests for read_image.
+@pt.mark.path('__test_save_grayscale_image.jpg')
+def test_read_image_grayscale_jpg(image):
+    """Given the path to a grayscale JPG file, :func:`read_image`
+    return the image's data as an :class:`numpy.ndarray`.
+    """
+    assert (image == np.array([
+        [0., .5, 1.,],
+        [0., .5, 1.,],
+        [0., .5, 1.,],
+    ])).all()
 
-        # Determine test result.
-        self.assertArrayEqual(exp, act)
 
-    def read_rgb(self, filetype, exp=None, as_video=True):
-        """Given the path to a RGB image file, return the image's
-        data as an array.
-        """
-        # Expected result.
-        if exp is None:
-            exp = np.array([
-                [
-                    [1., .5, 0.,],
-                    [1., .5, 0.,],
-                    [1., .5, 0.,],
-                ],
-                [
-                    [.5, 0., 1.,],
-                    [.5, 0., 1.,],
-                    [.5, 0., 1.,],
-                ],
-                [
-                    [0., 1., .5,],
-                    [0., 1., .5,],
-                    [0., 1., .5,],
-                ],
-            ], dtype=float)
-            if as_video:
-                exp = np.expand_dims(exp, 0)
+@pt.mark.path('__test_save_grayscale_image.png')
+def test_read_image_grayscale_png(image):
+    """Given the path to a grayscale PNG file, :func:`read_image`
+    return the image's data as an :class:`numpy.ndarray`.
+    """
+    assert (image == np.array([
+        [0., .5, 1.,],
+        [0., .5, 1.,],
+        [0., .5, 1.,],
+    ])).all()
 
-        # Test data and state.
-        kwargs = {
-            'filepath': f'tests/data/__test_save_rgb_image.{filetype}',
-        }
-        if not as_video:
-            kwargs['as_video'] = False
 
-        # Run test.
-        result = ir.read_image(**kwargs)
+@pt.mark.path('__test_save_grayscale_image.tiff')
+def test_read_image_grayscale_tiff(image):
+    """Given the path to a grayscale TIFF file, :func:`read_image`
+    return the image's data as an :class:`numpy.ndarray`.
+    """
+    assert (image == np.array([
+        [0., .5, 1.,],
+        [0., .5, 1.,],
+        [0., .5, 1.,],
+    ])).all()
 
-        # Extract actual result.
-        # Round the result to two decimal places to allow for the
-        # issues with floating point decimals.
-        act = np.around(result, 2)
 
-        # Determine test result.
-        self.assertArrayEqual(exp, act)
+@pt.mark.path('__test_save_grayscale_image.jpg')
+def test_read_image_grayscale_jpg_as_vid(image_as_vid):
+    """Given the path to a grayscale JPG file, :func:`read_image`
+    return the image's data as an :class:`numpy.ndarray`.
+    """
+    assert (image_as_vid == np.array([[
+        [0., .5, 1.,],
+        [0., .5, 1.,],
+        [0., .5, 1.,],
+    ]])).all()
 
-    # Test methods.
-    def test_read_grayscale_jpg(self):
-        """Given the path to a grayscale JPG file, return the image's
-        data as an array.
-        """
-        self.read_grayscale('jpg')
 
-    def test_read_grayscale_png(self):
-        """Given the path to a grayscale PNG file, return the image's
-        data as an array.
-        """
-        self.read_grayscale('png')
-
-    def test_read_grayscale_tiff(self):
-        """Given the path to a grayscale TIFF file, return the image's
-        data as an array.
-        """
-        self.read_grayscale('tiff')
-
-    def test_read_rgb_jpg(self):
-        """Given the path to a RGB JPG file, return the image's
-        data as an array.
-        """
-        # Adjust the expected result to account for how JPEG
-        # compression changed the color when we created the test
-        # file.
-        exp = np.array([
-            [
-                [
-                    [.92, .41, .66,],
-                    [.92, .41, .66,],
-                    [.92, .41, .66,],
-                ],
-                [
-                    [.59, .08, .33,],
-                    [.59, .08, .33,],
-                    [.59, .08, .33,],
-                ],
-                [
-                    [0., 1., .51,],
-                    [0., 1., .51,],
-                    [0., 1., .51,],
-                ],
-            ],
-        ], dtype=float)
-        self.read_rgb('jpg', exp)
-
-    def test_read_rgb_png(self):
-        """Given the path to a RGB PNG file, return the image's
-        data as an array.
-        """
-        self.read_rgb('png')
-
-    def test_read_rgb_tiff(self):
-        """Given the path to a RGB TIFF file, return the image's
-        data as an array.
-        """
-        self.read_rgb('tiff')
-
-    def test_file_does_not_exist(self):
-        """If given the path of a file that doesn't exist, raise a
-        FileNotFoundError exception.
-        """
-        # Test data and state.
-        filepath = 'tests/data/spam.jpg'
-
-        # Expected value.
-        exp_ex = FileNotFoundError
-        exp_msg = f'There is no file at {filepath}.'
-
-        # Run test and determine result.
-        with self.assertRaisesRegex(exp_ex, exp_msg):
-            ir.read_image(filepath)
-
-    def test_file_not_readable(self):
-        """If given the path of a file that isn't a readable image,
-        raise a ValueError exception.
-        """
-        # Test data and state.
-        filepath = 'tests/data/__test_not_image.txt'
-
-        # Expected value.
-        exp_ex = ValueError
-        exp_msg = f'The file at {filepath} cannot be read.'
-
-        # Run test and determine result.
-        with self.assertRaisesRegex(exp_ex, exp_msg):
-            ir.read_image(filepath)
-
-    def test_read_grayscale_jpg_as_still(self):
-        """Given the path to a grayscale JPG file, return the image's
-        data as an array. The resulting array should have two
-        dimensions.
-        """
-        self.read_grayscale('jpg', as_video=False)
-
-    def test_read_rgb_jpg_as_still(self):
-        """Given the path to a RGB JPG file, return the image's
-        data as an array. The resulting array should have two
-        dimensions.
-        """
-        # Adjust the expected result to account for how JPEG
-        # compression changed the color when we created the test
-        # file.
-        exp = np.array([
+@pt.mark.path('__test_save_rgb_image.jpg')
+def test_read_image_rgb_jpg(image):
+    """Given the path to a RGB JPG file, :func:`read_image`
+    return the image's data as an :class:`numpy.ndarray`.
+    """
+    assert (image == np.array([
+        [
             [
                 [.92, .41, .66,],
                 [.92, .41, .66,],
@@ -218,5 +100,103 @@ class ReadImageTestCase(ut.TestCase):
                 [0., 1., .51,],
                 [0., 1., .51,],
             ],
-        ], dtype=float)
-        self.read_rgb('jpg', exp, as_video=False)
+        ],
+    ])).all()
+
+
+@pt.mark.path('__test_save_rgb_image.png')
+def test_read_image_rgb_png(image):
+    """Given the path to a RGB PNG file, :func:`read_image`
+    return the image's data as an :class:`numpy.ndarray`.
+    """
+    assert (image == np.array([
+        [
+            [1., .5, 0.,],
+            [1., .5, 0.,],
+            [1., .5, 0.,],
+        ],
+        [
+            [.5, 0., 1.,],
+            [.5, 0., 1.,],
+            [.5, 0., 1.,],
+        ],
+        [
+            [0., 1., .5,],
+            [0., 1., .5,],
+            [0., 1., .5,],
+        ],
+    ])).all()
+
+
+@pt.mark.path('__test_save_rgb_image.tiff')
+def test_read_image_rgb_tiff(image):
+    """Given the path to a TIFF PNG file, :func:`read_image`
+    return the image's data as an :class:`numpy.ndarray`.
+    """
+    assert (image == np.array([
+        [
+            [1., .5, 0.,],
+            [1., .5, 0.,],
+            [1., .5, 0.,],
+        ],
+        [
+            [.5, 0., 1.,],
+            [.5, 0., 1.,],
+            [.5, 0., 1.,],
+        ],
+        [
+            [0., 1., .5,],
+            [0., 1., .5,],
+            [0., 1., .5,],
+        ],
+    ])).all()
+
+
+@pt.mark.path('__test_save_rgb_image.jpg')
+def test_read_image_rgb_jpg_as_vid(image_as_vid):
+    """Given the path to a RGB JPG file, :func:`read_image`
+    return the image's data as an :class:`numpy.ndarray`.
+    """
+    assert (image_as_vid == np.array([[
+        [
+            [
+                [.92, .41, .66,],
+                [.92, .41, .66,],
+                [.92, .41, .66,],
+            ],
+            [
+                [.59, .08, .33,],
+                [.59, .08, .33,],
+                [.59, .08, .33,],
+            ],
+            [
+                [0., 1., .51,],
+                [0., 1., .51,],
+                [0., 1., .51,],
+            ],
+        ],
+    ]])).all()
+
+
+def test_read_image_file_does_not_exist():
+    """If given the path of a file that doesn't exist, :func:`save_image`
+    should raise a :class:`FileNotFoundError`.
+    """
+    path = 'tests/data/spam.jpg'
+    with pt.raises(
+        FileNotFoundError,
+        match=f'There is no file at {path}.'
+    ):
+        _ = ir.read_image(path)
+
+
+def test_read_image_file_not_readablet():
+    """If given the path of a file that isn't a readable image,
+    :func:`read_image` should raise a :class:`ValueError` exception.
+    """
+    path = 'tests/data/__test_not_image.txt'
+    with pt.raises(
+        ValueError,
+        match=f'The file at {path} cannot be read.'
+    ):
+        _ = ir.read_image(path)
