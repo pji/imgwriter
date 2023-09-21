@@ -12,6 +12,29 @@ import numpy as np
 from numpy.typing import NDArray
 
 
+# Exceptions.
+class UnsupportedFileType(TypeError):
+    """The given file type isn't supported."""
+
+
+# Core functions.
+def read(path: Union[str, Path]) -> NDArray[np.float_]:
+    """Read an image or video file.
+
+    :param path: The path to the file.
+    :return: The image or video data as a :class:`numpy.ndarray`.
+    :rtype: numpy.ndarray
+    """
+    path = Path(path)
+    if path.suffix.casefold() in ['.jpg', '.png', '.tiff',]:
+        a = read_image(path)
+    elif path.suffix.casefold() in ['.mp4', '.avi',]:
+        a = read_video(path)
+    else:
+        raise UnsupportedFileType(f'{path.suffix}')
+    return a
+
+
 def read_image(
     filepath: Union[str, Path],
     as_video: bool = True
@@ -22,7 +45,7 @@ def read_image(
     :param as_video: (Optional.) Whether the data should be read as
         a still image or a single frame of video. The difference is
         video has one more dimension than a still image.
-    :return: A :class:numpy.ndarray object.
+    :return: A :class:`numpy.ndarray` object.
     :rtype: numpy.ndarray
 
     Usage::
@@ -82,12 +105,20 @@ def read_image(
     return a
 
 
-def read_video(filepath: str) -> NDArray[np.float_]:
-    """Capture image data from a video file. Due to the nature of
-    video encoding, this doesn't reverse an imgwriter.save(). It
-    should be considered experimental for now.
+def read_video(path: Union[str, Path]) -> NDArray[np.float_]:
+    """Capture image data from a video file.
+
+    .. note:
+        Video saved with :func:`imgwriter.save` or most other methods
+        will use a codec to compress the video. That compression is
+        lossy. That means the array to read from the file will not be
+        exactly the same as the array you saved out to the file.
+
+    :param path: The path to the file to read.
+    :return: A :class:`numpy.ndarray` containing the data from the file.
+    :rtype: numpy.ndarray
     """
-    capture = cv2.VideoCapture(filepath)
+    capture = cv2.VideoCapture(str(path))
     frames = []
     while capture.isOpened():
         ret, frame = capture.read()

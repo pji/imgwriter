@@ -1,19 +1,30 @@
-#########
-imgwriter
-#########
+.. imgwriter documentation master file, created by
+   sphinx-quickstart on Tue Sep 19 07:08:58 2023.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
 
-A Python package for saving arrays as images or video.
+Welcome to imgwriter's documentation!
+=====================================
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+   
+   self
+   /api.rst
+   /examples.rst
+   /requirements.rst
 
 
 Why did you write this?
 =======================
-I've been working on some code to procedurally generate images and
-video. It is getting pretty bloated, and the file IO part seemed
+I'd been working on some code to procedurally generate images and
+video. It was getting pretty bloated, and the file IO part seemed
 like something that was reasonable to carve off. Because of that, it
 is pretty niche. It's really only useful if you are interacting with
-images or video as numpy.ndarrays and don't mind some of the
-limitations of this package. But, hey, maybe there is someone else
-out there who could use it.
+images or video as :class:`numpy.ndarray` objects and don't mind some
+of the limitations of this package. But, hey, maybe there is someone
+else out there who could use it.
 
 
 How do I run the code?
@@ -42,11 +53,6 @@ imgwriter on and run the following::
 Replace `path/to/local/copy` with the path for your local clone of
 this repository.
 
-If you are using macOS Big Sur, you may run into an error when the
-install tries to bring in numpy. If you do, see the question above
-about installing `opencv-python` or `numpy` on macOS Big Sur for
-a solution.
-
 
 How do I run the tests?
 =======================
@@ -71,3 +77,11 @@ That said, if other people do find it useful and start using it, I'll
 reconsider. If you do use it and see something you want changed or
 added, go ahead and open an issue. If anyone ever does that, I'll
 figure out how to handle it.
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

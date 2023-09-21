@@ -12,9 +12,9 @@ markers = ['codec', 'ext', 'path',]
 
 [project]
 name = "imgwriter"
-version = "0.2.2"
+version = "0.2.3"
 authors = [
-  { name="pji@mac.com", email="pji@mac.com" },
+  { name="Paul J. Iutzi", email="pji@mac.com" },
 ]
 description = "A Python package for saving arrays as images or video."
 readme = "README.rst"

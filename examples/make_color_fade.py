@@ -5,6 +5,8 @@ make_color_fade
 Create a video that fades from one color to another.
 """
 import argparse
+from textwrap import dedent
+
 import numpy as np
 
 import imgwriter as iw
@@ -49,12 +51,14 @@ def get_channels(color: str) -> tuple[int, int, int]:
     return (r, g, b)
 
 
-def main(filepath: str,
-         res: tuple[int, int],
-         start_color: tuple[int, int, int],
-         end_color: tuple[int, int, int],
-         frames: int,
-         framerate: float) -> None:
+def main(
+    filepath: str,
+    res: tuple[int, int],
+    start_color: tuple[int, int, int],
+    end_color: tuple[int, int, int],
+    frames: int,
+    framerate: float
+) -> None:
     """Create a video that fades from one color to another.
 
     :param filepath: The location to save the spacer image.
@@ -86,6 +90,11 @@ def main(filepath: str,
 
 if __name__ == '__main__':
     # Define the command line options.
+    resolutions = tuple(key for key in RESOLUTIONS)
+    resolution_descr = '\n'.join(
+        f'  * {key} ({RESOLUTIONS[key][0]}\u00d7{RESOLUTIONS[key][1]})'
+        for key in RESOLUTIONS
+    )
     options = {
         'end_color': {
             'args': ('-e', '--end_color',),
@@ -127,7 +136,9 @@ if __name__ == '__main__':
             'kwargs': {
                 'type': str,
                 'action': 'store',
-                'help': 'The resolution of the video.',
+                'choices': resolutions,
+                'help': 'The resolution of the video. See options below.',
+                'metavar': 'RESOLUTION',
                 'default': '720p'
             }
         },
@@ -145,7 +156,14 @@ if __name__ == '__main__':
     # Read the command line arguments.
     p = argparse.ArgumentParser(
         prog='make_color_fade.py',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
         description='Create a video of a color fade.',
+        epilog=dedent('''\
+        RESOLUTIONS
+        -----------
+        The following resolutions are available options:
+
+        ''') + resolution_descr
     )
     for option in options:
         args = options[option]['args']

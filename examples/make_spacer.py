@@ -5,6 +5,8 @@ make_spacer
 Create a black JPG that can be used as a spacer in a video.
 """
 import argparse
+from textwrap import dedent
+
 import numpy as np
 
 import imgwriter as iw
@@ -74,6 +76,11 @@ def main(filepath: str,
 
 if __name__ == '__main__':
     # Define the command line options.
+    resolutions = tuple(key for key in RESOLUTIONS)
+    resolution_descr = '\n'.join(
+        f'  * {key} ({RESOLUTIONS[key][0]}\u00d7{RESOLUTIONS[key][1]})'
+        for key in RESOLUTIONS
+    )
     options = {
         'filepath': {
             'args': ('filepath',),
@@ -88,7 +95,9 @@ if __name__ == '__main__':
             'kwargs': {
                 'type': str,
                 'action': 'store',
-                'help': 'The resolution of the video.',
+                'choices': resolutions,
+                'help': 'The resolution of the video. See options below.',
+                'metavar': 'RESOLUTION',
                 'default': '720p'
             }
         },
@@ -106,7 +115,14 @@ if __name__ == '__main__':
     # Read the command line arguments.
     p = argparse.ArgumentParser(
         prog='make_spacer.py',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
         description='Create a spacer image for video.',
+        epilog=dedent('''\
+        RESOLUTIONS
+        -----------
+        The following resolutions are available options:
+
+        ''') + resolution_descr
     )
     for option in options:
         args = options[option]['args']

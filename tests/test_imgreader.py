@@ -16,7 +16,7 @@ def image(request):
     """A common test for :func:`read_image`."""
     path = request.node.get_closest_marker('path').args[0]
     path = f'tests/data/{path}'
-    a = ir.read_image(path)
+    a = ir.read(path)
     return np.around(a, 2)
 
 
@@ -29,7 +29,22 @@ def image_as_vid(request):
     return np.around(a, 2)
 
 
-# Tests for read_image.
+@pt.fixture
+def video_data():
+    """An array of video data for testing."""
+    frames = 72
+    res = [1280, 720]
+    start_color = (0x00, 0xff, 0x00)
+    end_color = (0xff, 0x00, 0xff)
+    diff_inc = [-1 * (s - e) / frames for s, e in zip(start_color, end_color)]
+    a = np.indices((frames, *res[::-1], 3), dtype=np.float32)[0]
+    for c in 0, 1, 2:
+        a[:, :, :, c] *= diff_inc[c]
+        a[:, :, :, c] += start_color[c]
+    yield a.astype(np.uint8)
+
+
+# Tests for read.
 @pt.mark.path('__test_save_grayscale_image.jpg')
 def test_read_image_grayscale_jpg(image):
     """Given the path to a grayscale JPG file, :func:`read_image`
@@ -152,6 +167,22 @@ def test_read_image_rgb_tiff(image):
     ])).all()
 
 
+def test_read_color_mp4(video_data):
+    """Given a path to an MP4 file, :func:`read_video` should return the
+    contents of the video as a :class:`numpy.ndarray`.
+    """
+    path = 'tests/data/__test_read_color.mp4'
+    a = ir.read(path)
+
+    # The compression makes it hard to predict the exact color values
+    # of each pixel in the output. The following checks to see if there
+    # is any variance greater than ~2%. The data type has to change to
+    # `int` because `numpy.uint8` is unsigned, so any negative values
+    # roll over.
+    assert (np.abs(a.astype(int) - video_data.astype(int)) <= 5).all()
+
+
+# Tests for read_image.
 @pt.mark.path('__test_save_rgb_image.jpg')
 def test_read_image_rgb_jpg_as_vid(image_as_vid):
     """Given the path to a RGB JPG file, :func:`read_image`
@@ -200,3 +231,19 @@ def test_read_image_file_not_readablet():
         match=f'The file at {path} cannot be read.'
     ):
         _ = ir.read_image(path)
+
+
+# Tests for read_video.
+def test_read_video_color_mp4(video_data):
+    """Given a path to an MP4 file, :func:`read_video` should return the
+    contents of the video as a :class:`numpy.ndarray`.
+    """
+    path = 'tests/data/__test_read_color.mp4'
+    a = ir.read_video(path)
+
+    # The compression makes it hard to predict the exact color values
+    # of each pixel in the output. The following checks to see if there
+    # is any variance greater than ~2%. The data type has to change to
+    # `int` because `numpy.uint8` is unsigned, so any negative values
+    # roll over.
+    assert (np.abs(a.astype(int) - video_data.astype(int)) <= 5).all()
