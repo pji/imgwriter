@@ -152,7 +152,7 @@ def check_type_hints(path):
 def check_unit_tests(path):
     """Run the unit tests."""
     print('Running unit tests...')
-    result = pytest.main()
+    result = pytest.main(['--capture', 'fd',])
     print('Unit tests complete.')
     return result
 

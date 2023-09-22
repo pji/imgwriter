@@ -11,10 +11,7 @@ import cv2
 import numpy as np
 from numpy.typing import NDArray
 
-
-# Exceptions.
-class UnsupportedFileType(TypeError):
-    """The given file type isn't supported."""
+from imgwriter.common import SUPPORTED, Image, UnsupportedFileType, Video
 
 
 # Core functions.
@@ -26,9 +23,10 @@ def read(path: Union[str, Path]) -> NDArray[np.float_]:
     :rtype: numpy.ndarray
     """
     path = Path(path)
-    if path.suffix.casefold() in ['.jpg', '.png', '.tiff',]:
+    ftype = SUPPORTED[path.suffix.casefold()[1:]]
+    if isinstance(ftype, Image):
         a = read_image(path)
-    elif path.suffix.casefold() in ['.mp4', '.avi',]:
+    elif isinstance(ftype, Video):
         a = read_video(path)
     else:
         raise UnsupportedFileType(f'{path.suffix}')

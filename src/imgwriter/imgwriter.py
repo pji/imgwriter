@@ -4,6 +4,7 @@ imgwriter
 
 A Python module for saving arrays as images or video.
 """
+import logging
 from copy import deepcopy
 from functools import wraps
 from pathlib import Path
@@ -13,18 +14,8 @@ import cv2
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
+from imgwriter.common import SUPPORTED, Image, UnsupportedFileType, Video
 
-# Register supported types. This is also used to determine whether the
-# user is trying to save data as a still image or video.
-SUPPORTED_TYPES = {
-    'avi': 'video',
-    'jpg': 'image',
-    'jpeg': 'image',
-    'mp4': 'video',
-    'png': 'image',
-    'tif': 'image',
-    'tiff': 'image',
-}
 
 # Constants to replace indices with axis names for readability.
 X, Y, Z = 2, 1, 0
@@ -105,14 +96,25 @@ def save(filepath: Union[str, Path], a: ArrayLike, *args, **kwargs) -> None:
     :param a: The array of image data.
     :return: None.
     :rtype: None.
+
+    Supported File Types
+    --------------------
+    :mod:`imgwriter` uses :mod:`cv2` for all save operations. The
+    formats supported by :mod:`cv2` varies depending on operating
+    system and software installed. Since I need to check the file
+    type to determine whether an image or a video is being saved,
+    I have to limit the supported file formats to ones I think
+    are supported across platforms.
     """
     filepath = Path(filepath)
-    filetype = filepath.suffix[1:]
-    save_as = SUPPORTED_TYPES[filetype]
-    if save_as == 'image':
+    ftype = filepath.suffix.casefold()[1:]
+    save_as = SUPPORTED[ftype]
+    if isinstance(save_as, Image):
         save_fn = save_image
-    else:
+    elif isinstance(save_as, Video):
         save_fn = save_video
+    else:
+        raise UnsupportedFileType(f'{ftype}')
     save_fn(filepath, a, *args, **kwargs)
 
 
@@ -189,7 +191,9 @@ def save_video(
     if len(a.shape) == 4:
         iscolor = True
 
-    vwriter = cv2.VideoWriter(filepath, fourcc, framerate, framesize, iscolor)
+    vwriter = cv2.VideoWriter(
+        filepath, fourcc, framerate, framesize, iscolor
+    )
     for i in range(a.shape[Z]):
         vwriter.write(a[i])
     vwriter.release()

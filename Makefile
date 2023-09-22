@@ -32,10 +32,10 @@ pre:
 .PHONY: test
 test:
 	python -m pipenv install --dev -e .
-	python -m pytest --capture=sys
+	python -m pytest --capture=fd
 
 
 .PHONY: testv
 testv:
 	python -m pipenv install --dev -e .
-	python -m pytest -vv  --capture=sys
+	python -m pytest -vv  --capture=fd
