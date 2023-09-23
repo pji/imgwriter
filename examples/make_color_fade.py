@@ -12,31 +12,13 @@ import numpy as np
 import imgwriter as iw
 
 
+# Constants.
 R, G, B = 0, 1, 2
-RESOLUTIONS = {
-    'dv_ntsc': (720, 480),
-    'd1_ntsc': (720, 486),
-    'dv_pal': (720, 576),
-    'd1_pal': (720, 576),
-    'dvcpro_hd_720p': (960, 720),
-    'dvcpro_hd_1080_59i': (1280, 1080),
-    'dvcpro_hd_1080_50i': (1440, 1080),
-    'hdv_1080i': (1440, 1080),
-    'hdv_1080p': (1440, 1080),
-    'sony_hdcam': (1440, 1080),
-    'sony_hdcam_sr': (1440, 1080),
-    'academy_2x': (1828, 1332),
-    'full_aperature_native_2x': (2048, 1556),
-    'academy_4x': (3656, 2664),
-    'full_aperature_4x': (4096, 3112),
-    '720p': (1280, 720),
-    '1080p': (1920, 1080),
-    '4k': (3840, 2160),
-    '8k': (7680, 4320),
-    '16k': (15360, 8640),
-}
+RESOLUTIONS = iw.RESOLUTIONS
+SUPPORTED = iw.SUPPORTED
 
 
+# Utility functions.
 def get_channels(color: str) -> tuple[int, int, int]:
     """Convert a 24-bit hex color string into an RGB color.
 
@@ -51,13 +33,37 @@ def get_channels(color: str) -> tuple[int, int, int]:
     return (r, g, b)
 
 
+def build_formats_description() -> str:
+    """Build a list of the supported formats for the help file."""
+    lables = ('FORMAT', 'CODECS',)
+    title = 'SUPPORTED FILE FORMATS'
+    descr = 'The following container formats are known to be supported.'
+    tbl_tmp = '    {:<11} {}'
+    formats = [
+        tbl_tmp.format(vid, ','.join(SUPPORTED[vid].codecs))
+        for vid in SUPPORTED
+        if isinstance(SUPPORTED[vid], iw.Video)
+    ]
+    return '\n'.join((
+        title,
+        '-' * len(title),
+        descr,
+        '',
+        tbl_tmp.format(*lables),
+        *formats,
+        ''
+    ))
+
+
+# Mainline.
 def main(
     filepath: str,
     res: tuple[int, int],
     start_color: tuple[int, int, int],
     end_color: tuple[int, int, int],
     frames: int,
-    framerate: float
+    framerate: float,
+    codec: str = 'mp4v'
 ) -> None:
     """Create a video that fades from one color to another.
 
@@ -85,7 +91,7 @@ def main(
     a = a.astype(np.uint8)
 
     # Send that image and the save location to imagewriter.save_video.
-    iw.save(filepath, a, framerate)
+    iw.write_video(filepath, a, framerate, codec=codec)
 
 
 if __name__ == '__main__':
@@ -96,6 +102,15 @@ if __name__ == '__main__':
         for key in RESOLUTIONS
     )
     options = {
+        'codec': {
+            'args': ('-c', '--codec'),
+            'kwargs': {
+                'type': str,
+                'action': 'store',
+                'help': 'The codec to encode the video.',
+                'default': 'mp4v',
+            },
+        },
         'end_color': {
             'args': ('-e', '--end_color',),
             'kwargs': {
@@ -158,12 +173,17 @@ if __name__ == '__main__':
         prog='make_color_fade.py',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description='Create a video of a color fade.',
-        epilog=dedent('''\
-        RESOLUTIONS
-        -----------
-        The following resolutions are available options:
+        epilog=(
+            dedent('''\
+            RESOLUTIONS
+            -----------
+            The following resolutions are available options:
 
-        ''') + resolution_descr
+            ''')
+            + resolution_descr
+            + '\n\n'
+            + build_formats_description()
+        )
     )
     for option in options:
         args = options[option]['args']
@@ -175,9 +195,12 @@ if __name__ == '__main__':
     res = RESOLUTIONS[args.resolution]
     start_color = get_channels(args.start_color)
     end_color = get_channels(args.end_color)
-    main(args.filepath,
-         res,
-         start_color,
-         end_color,
-         args.length,
-         args.framerate)
+    main(
+        args.filepath,
+        res,
+        start_color,
+        end_color,
+        args.length,
+        args.framerate,
+        args.codec
+    )

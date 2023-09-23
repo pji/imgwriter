@@ -1,5 +1,6 @@
 .PHONY: build
 build:
+	python -m pipenv install --dev -e .
 	sphinx-build -b html docs/source/ docs/build/html
 	python -m build
 	twine check dist/*

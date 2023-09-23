@@ -23,7 +23,7 @@ def test_make_color_fade(tmp_path):
     color, `make_color_fade.py` should create a video at the given
     location that fades from the starting color to the ending color.
     """
-    expected = 'tests/data/__test_read_color.mp4'
+    expected = 'tests/data/__test_make_color_fade.mp4'
     path = tmp_path / '__test_make_color_fade.mp4'
     cmd = [
         'python',
@@ -31,6 +31,25 @@ def test_make_color_fade(tmp_path):
         path,
         '-s', '00ff00',
         '-e', 'ff00ff',
+    ]
+    run(cmd)
+    compare_files(path, expected)
+
+
+def test_make_color_fade_c(tmp_path):
+    """When called with `-c` and a valid codec for the format,
+    `make_color_fade.py` should create a video at the given
+    location with the given frame rate and length.
+    """
+    expected = 'tests/data/__test_make_color_fade_c.mp4'
+    path = tmp_path / '__test_make_color_fade_c.mp4'
+    cmd = [
+        'python',
+        'examples/make_color_fade.py',
+        path,
+        '-s', '00ff00',
+        '-e', 'ff00ff',
+        '-c', 'hev1',
     ]
     run(cmd)
     compare_files(path, expected)

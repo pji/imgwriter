@@ -12,7 +12,7 @@ from subprocess import run
 
 import numpy as np
 
-from imgwriter import SUPPORTED_TYPES, save
+from imgwriter import save
 from imgwriter.common import VALID_FORMATS, Image, Video
 from imgwriter.imgwriter import save_video
 
@@ -105,6 +105,13 @@ run([
 run([
     'python',
     'examples/make_color_fade.py',
+    'tests/data/__test_make_color_fade.mp4',
+    '-s', '00ff00',
+    '-e', 'ff00ff',
+])
+run([
+    'python',
+    'examples/make_color_fade.py',
     'tests/data/__test_make_color_fade_fl.mp4',
     '-s', '00ff00',
     '-e', 'ff00ff',
@@ -118,6 +125,14 @@ run([
     '-s', '00ff00',
     '-e', 'ff00ff',
     '-r', 'dv_ntsc'
+])
+run([
+    'python',
+    'examples/make_color_fade.py',
+    'tests/data/__test_make_color_fade_c.mp4',
+    '-s', '00ff00',
+    '-e', 'ff00ff',
+    '-c', 'hev1'
 ])
 
 # Spacers.

@@ -50,7 +50,7 @@ a solution.
 
 How do I run the tests?
 =======================
-The unit tests are built using :mod:`pytest`. The `Makefile` has a
+The unit tests are built using `pytest`. The `Makefile` has a
 shortcut for running these tests::
 
     make test
