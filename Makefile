@@ -4,6 +4,12 @@ build:
 	python -m build
 	twine check dist/*
 
+.PHONY: buildt
+buildt:
+	python -m pipenv install --dev -e .
+	rm tests/data/*
+	python tests/build_data.py
+
 .PHONY: clean
 clean:
 	rm -rf docs/build/html
