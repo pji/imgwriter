@@ -17,6 +17,13 @@ from numpy.typing import ArrayLike, NDArray
 from imgwriter.common import SUPPORTED, Image, UnsupportedFileType, Video
 
 
+# Importable names.
+__all__ = [
+    "save", "save_image", "save_video",
+    "write", "write_image", "write_video",
+]
+
+
 # Constants to replace indices with axis names for readability.
 X, Y, Z = 2, 1, 0
 
@@ -87,7 +94,7 @@ def _float_to_uint8(a: ArrayLike) -> NDArray[np.uint8]:
     return a.astype(np.uint8)
 
 
-def save(filepath: Union[str, Path], a: ArrayLike, *args, **kwargs) -> None:
+def write(filepath: Union[str, Path], a: ArrayLike, *args, **kwargs) -> None:
     """Save an array of image data to file.
 
     :param filepath: The location and name of the file that will
@@ -119,7 +126,7 @@ def save(filepath: Union[str, Path], a: ArrayLike, *args, **kwargs) -> None:
 
 
 @uses_opencv
-def save_image(
+def write_image(
     filepath: Union[str, Path],
     a: NDArray[np.uint8],
     as_series: bool = True
@@ -160,7 +167,7 @@ def save_image(
 
 
 @uses_opencv
-def save_video(
+def write_video(
     filepath: Union[str, Path],
     a: NDArray[np.uint8],
     framerate: float = 12.0,
@@ -197,3 +204,9 @@ def save_video(
     for i in range(a.shape[Z]):
         vwriter.write(a[i])
     vwriter.release()
+
+
+# Function aliases.
+save = write
+save_image = write_image
+save_video = write_video

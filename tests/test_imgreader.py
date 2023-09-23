@@ -44,6 +44,14 @@ def video_data():
     yield a.astype(np.uint8)
 
 
+# Tests for load.
+def test_load_is_alias_for_read():
+    """:func:`read` is an alias for :func:`save`."""
+    assert ir.load is ir.read
+    assert ir.load_image is ir.read_image
+    assert ir.load_video is ir.read_video
+
+
 # Tests for read.
 @pt.mark.path('__test_save_grayscale_image.jpg')
 def test_read_image_grayscale_jpg(image):

@@ -14,6 +14,13 @@ from numpy.typing import NDArray
 from imgwriter.common import SUPPORTED, Image, UnsupportedFileType, Video
 
 
+# Importable names.
+__all__ = [
+    "load", "load_image", "load_video",
+    "read", "read_image", "read_video",
+]
+
+
 # Core functions.
 def read(path: Union[str, Path]) -> NDArray[np.float_]:
     """Read an image or video file.
@@ -128,3 +135,9 @@ def read_video(path: Union[str, Path]) -> NDArray[np.float_]:
     for i, frame in enumerate(frames):
         a[i] = frame
     return a
+
+
+# Function aliases.
+load = read
+load_image = read_image
+load_video = read_video

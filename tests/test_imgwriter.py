@@ -461,3 +461,11 @@ def test_save_video_8_bit_rgb(tmp_path):
         for codec in vid.codecs:
             exp_name = f'__test_save_rgb_video_{codec}.{vid.ext}'
             save_video_test(a, vid.ext, codec, exp_name, tmp_path)
+
+
+# Tests for write.
+def test_write_is_alias_for_save():
+    """:func:`write` is an alias for :func:`save`."""
+    assert iw.write is iw.save
+    assert iw.write_image is iw.save_image
+    assert iw.write_video is iw.save_video
